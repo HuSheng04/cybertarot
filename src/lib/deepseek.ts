@@ -86,13 +86,33 @@ ${cardsSection}
 }
 
 /* =================================================== */
-/*  超时辅助函数                                        */
+/*  请求信号合并                                        */
 /* =================================================== */
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+/**
+ * 合并外部 AbortSignal 与内部超时控制
+ * 任一信号触发 abort 则组合信号中止
+ */
+function combineSignals(externalSignal?: AbortSignal): {
+  signal: AbortSignal
+  clear: () => void
+} {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), ms)
-  return promise.finally(() => clearTimeout(timeout))
+  const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS)
+
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      clearTimeout(timeoutId)
+      controller.abort()
+    } else {
+      externalSignal.addEventListener("abort", () => controller.abort(), { once: true })
+    }
+  }
+
+  return {
+    signal: controller.signal,
+    clear: () => clearTimeout(timeoutId),
+  }
 }
 
 /* =================================================== */
@@ -123,7 +143,9 @@ function buildRequestBody(question: string, cards: DrawnCard[]) {
  * @param cards - 抽到的三张牌
  * @param apiKey - DeepSeek API Key（可选，不传则使用服务端默认 Key）
  * @param signal - 外部 AbortSignal（用于客户端断开时中止）
- * @returns ReadableStream<string> — 流式文本块
+ * @returns ReadableStream<Uint8Array> — 流式响应体
+ *
+ * 超时 10s，外部中止 + 超时任一触发即中止
  *
  * @throws Error — 网络错误、API 错误、超时
  */
@@ -140,35 +162,40 @@ export function createReadingStream(
   }
 
   const body = buildRequestBody(question, cards)
+  const { signal: mergedSignal, clear } = combineSignals(signal)
 
-  const fetchPromise = fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
+  return fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify(body),
-    signal, // 外部 AbortSignal（客户端断开时触发）
-  }).then(async (response) => {
-    if (!response.ok) {
-      let errorBody = ""
-      try {
-        errorBody = await response.text()
-      } catch {
-        // ignore parse error
-      }
-      throw new Error(`DeepSeek API 错误 (${response.status}): ${errorBody || response.statusText}`)
-    }
-
-    const stream = response.body
-    if (!stream) {
-      throw new Error("DeepSeek 响应体为空")
-    }
-
-    return stream
+    signal: mergedSignal,
   })
+    .then(async (response) => {
+      clear()
+      if (!response.ok) {
+        let errorBody = ""
+        try {
+          errorBody = await response.text()
+        } catch {
+          // ignore parse error
+        }
+        throw new Error(`DeepSeek API 错误 (${response.status}): ${errorBody || response.statusText}`)
+      }
 
-  return withTimeout(fetchPromise, DEFAULT_TIMEOUT_MS)
+      const stream = response.body
+      if (!stream) {
+        throw new Error("DeepSeek 响应体为空")
+      }
+
+      return stream
+    })
+    .catch((error) => {
+      clear()
+      throw error
+    })
 }
 
 /* =================================================== */

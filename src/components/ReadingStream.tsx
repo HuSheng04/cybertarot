@@ -115,6 +115,17 @@ export function ReadingStream({ cards, question, apiKey, onReset, onComplete }: 
   /* =================================================== */
 
   const startReading = useCallback(async () => {
+    // 清除上次错误状态（支持重试时安全重置）
+    setHasError(false)
+    setErrorMessage("")
+    setParagraphs([])
+    setStreamingTitle("")
+    setStreamingContent("")
+    setIsStreaming(true)
+    bufferRef.current = ""
+    hasCompletedRef.current = false
+    setHasCompleted(false)
+
     const controller = new AbortController()
     controllerRef.current = controller
 
