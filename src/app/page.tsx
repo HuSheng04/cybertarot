@@ -171,10 +171,10 @@ export default function HomePage() {
           <h1 className="font-heading text-4xl tracking-wider text-neon-cyan sm:text-5xl md:text-6xl">
             赛博占卜师
           </h1>
-          <p className="max-w-md font-subheading text-lg tracking-wide text-text-secondary">
+          <p className="font-subheading text-lg tracking-wide text-text-secondary">
             在数据的洪流中，寻找你的命运
           </p>
-          <p className="max-w-sm text-sm text-text-muted">
+          <p className="text-sm text-text-muted">
             2077 年，赛博先知为你抽取三张遗物卡牌，
             <br />
             解读过去的痕迹、现在的能量和未来的可能。
@@ -330,7 +330,7 @@ export default function HomePage() {
             transition={springGentle}
           >
             {/* 顶部渐变过渡：透明 → 半透明背景 */}
-            <div className="max-h-[60dvh] overflow-y-auto bg-gradient-to-t from-deep-space/85 from-20% via-deep-space/60 via-60% to-transparent to-100% pt-12 backdrop-blur-sm">
+            <div className="max-h-[75dvh] overflow-y-auto bg-gradient-to-t from-deep-space/85 from-20% via-deep-space/60 via-60% to-transparent to-100% pt-12 backdrop-blur-sm">
               <div className="mx-auto max-w-lg px-4 pb-8">
                 <ReadingStream
                   cards={cards}

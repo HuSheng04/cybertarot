@@ -170,7 +170,7 @@ export default function CardsPage() {
                   setActiveFilter(tab.key)
                   setExpandedId(null)
                 }}
-                className={`relative rounded-lg border px-3.5 py-1.5 font-subheading text-xs tracking-wide transition-colors duration-200 ${
+                className={`relative rounded-lg border px-3.5 py-2.5 min-h-[44px] font-subheading text-xs tracking-wide transition-colors duration-200 ${
                   isActive
                     ? "border-neon-cyan bg-neon-cyan/10 text-neon-cyan"
                     : "border-card-border text-text-secondary hover:border-card-hover hover:text-text-primary"

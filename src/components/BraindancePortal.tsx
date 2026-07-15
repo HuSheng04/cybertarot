@@ -591,7 +591,7 @@ export function BraindancePortal() {
               <button
                 type="button"
                 onClick={() => setMode("select")}
-                className="rounded-lg border border-card-border px-4 py-2.5 text-xs text-text-muted transition-colors hover:text-text-secondary"
+                className="rounded-lg border border-card-border px-4 py-3 min-h-[44px] text-xs text-text-muted transition-colors hover:text-text-secondary"
               >
                 返回
               </button>

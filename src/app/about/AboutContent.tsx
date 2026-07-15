@@ -248,7 +248,7 @@ export default function AboutContent() {
         {/* Task 8.2 — 关键数字展示                                          */}
         {/* ================================================================ */}
         <motion.section
-          className="flex justify-center gap-12 py-4"
+          className="flex justify-center gap-8 sm:gap-12 py-4"
           variants={numberStagger}
           initial="hidden"
           whileInView="visible"

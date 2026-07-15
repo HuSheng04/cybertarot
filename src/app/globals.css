@@ -367,6 +367,18 @@ body.intro-mode {
   }
 }
 
+/* ===== 移动端触控优化 ===== */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 低端移动设备降低扫描线 GPU 负载 */
+@media (max-width: 640px) {
+  body::after {
+    opacity: 0.15;
+  }
+}
+
 /* ===== 深空径向渐变辅助 ===== */
 @utility bg-deep-radial {
   background: radial-gradient(
