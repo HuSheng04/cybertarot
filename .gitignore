@@ -37,6 +37,9 @@ yarn-error.log*
 # e2e screenshots
 /e2e/screenshots/
 
+# generated screenshot originals (compressed copies are in docs/screenshots/)
+/public/screenshots/
+
 # superpowers brainstorming artifacts
 .superpowers/
 
@@ -49,3 +52,5 @@ docs/superpowers/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel

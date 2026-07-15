@@ -8,6 +8,37 @@
 
 ---
 
+## 📸 界面预览
+
+<p align="center">
+  <img src="docs/screenshots/home-braindance.webp" alt="Braindance 神经接口接入" width="49%" />
+  <img src="docs/screenshots/home-question.webp" alt="冥想终端问题输入" width="49%" />
+</p>
+<p align="center">
+  <em>↑ Braindance 神经接口接入（左）与冥想终端问题输入（右）</em>
+</p>
+
+<br />
+
+<p align="center">
+  <img src="docs/screenshots/home-reading.webp" alt="3D 翻牌 + AI 流式解读" width="80%" />
+</p>
+<p align="center">
+  <em>↑ 3D 翻牌桌 + DeepSeek AI 流式解读段落浮现</em>
+</p>
+
+<br />
+
+<p align="center">
+  <img src="docs/screenshots/about.webp" alt="关于页面" width="49%" />
+  <img src="docs/screenshots/cards.webp" alt="牌库百科" width="49%" />
+</p>
+<p align="center">
+  <em>↑ 关于页面（左）与 78 张牌库百科（右）</em>
+</p>
+
+---
+
 ## ✨ 核心功能
 
 | 功能 | 说明 |
