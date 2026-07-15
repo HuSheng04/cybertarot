@@ -1,0 +1,416 @@
+/* ===== CyberTarot 赛博占卜师 — 全局样式 ===== */
+
+@import "tailwindcss";
+
+/* ===== Tailwind v4 主题令牌 ===== */
+@theme inline {
+  /* 霓虹赛博配色 */
+  --color-deep-space: #0a0a1a;
+  --color-neon-cyan: #00f0ff;
+  --color-neon-purple: #b44dff;
+  --color-card-surface: #12122a;
+  --color-card-border: #1a1a3a;
+  --color-card-hover: #1e1e42;
+  --color-text-primary: #e8e8f0;
+  --color-text-secondary: #8888aa;
+  --color-text-muted: #5a5a7a;
+
+  /* 字体家族 */
+  --font-heading: "Orbitron", sans-serif;
+  --font-subheading: "Rajdhani", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  /* 霓虹发光阴影 */
+  --shadow-neon-cyan: 0 0 10px #00f0ff, 0 0 20px rgba(0, 240, 255, 0.3);
+  --shadow-neon-purple: 0 0 10px #b44dff, 0 0 20px rgba(180, 77, 255, 0.3);
+  --shadow-card: 0 4px 30px rgba(0, 0, 0, 0.5);
+  --shadow-card-glow: 0 4px 30px rgba(0, 240, 255, 0.1), 0 0 15px rgba(0, 240, 255, 0.05);
+
+  /* 自定义动画 */
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+  --animate-pulse-neon: pulse-neon 3s ease-in-out infinite;
+  --animate-scan-line: scan-line 4s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+/* ===== Keyframes ===== */
+@keyframes glow {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-neon {
+  0%,
+  100% {
+    box-shadow: 0 0 5px #00f0ff, 0 0 10px rgba(0, 240, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 10px #00f0ff, 0 0 20px rgba(0, 240, 255, 0.4);
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* ===== 自定义 Utility 类 ===== */
+@utility text-glow-cyan {
+  text-shadow: 0 0 7px #00f0ff, 0 0 10px rgba(0, 240, 255, 0.5);
+}
+@utility text-glow-purple {
+  text-shadow: 0 0 7px #b44dff, 0 0 10px rgba(180, 77, 255, 0.5);
+}
+@utility neon-border {
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 5px rgba(0, 240, 255, 0.2);
+}
+
+/* ===== 全局基础样式 ===== */
+body {
+  background:
+    radial-gradient(ellipse at center, rgba(10, 10, 26, 0.6) 0%, rgba(10, 10, 26, 0.95) 70%) fixed,
+    url("/assets/bg-neural-dark.webp") center center / cover no-repeat fixed;
+  background-color: var(--color-deep-space);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 冥想模式（QuestionInput 阶段）— 背景更暗，更安静 */
+body.meditation-mode {
+  background:
+    radial-gradient(ellipse at center, rgba(10, 10, 26, 0.8) 0%, rgba(10, 10, 26, 0.98) 70%) fixed,
+    url("/assets/bg-neural-dark.webp") center center / cover no-repeat fixed;
+}
+
+/* 全屏翻牌模式（shuffling / reading 阶段）— 背景几乎纯黑，让 3D 粒子做主视觉 */
+body.fullscreen-mode {
+  background: var(--color-deep-space);
+}
+
+/* ===== 滚动条样式 ===== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-deep-space);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-card-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neon-cyan);
+}
+
+/* ===== 扫描线 Overlay（全局装饰） ===== */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    var(--color-scanline, rgba(0, 240, 255, 0.03)) 2px,
+    var(--color-scanline, rgba(0, 240, 255, 0.03)) 4px
+  );
+  animation: scan-line 8s linear infinite;
+  opacity: 0.4;
+}
+
+/* ===== Phase 3: Braindance EEG Keyframes ===== */
+
+/* EEG 环形轨道旋转 */
+@keyframes eeg-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* EEG 径向波动 — 慢速 ping */
+@keyframes ping-slow {
+  0% { transform: scale(0.6); opacity: 0; }
+  40% { opacity: 0.15; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+@keyframes ping-slower {
+  0% { transform: scale(0.6); opacity: 0; }
+  40% { opacity: 0.1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+@keyframes ping-slowest {
+  0% { transform: scale(0.6); opacity: 0; }
+  40% { opacity: 0.05; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+/* 十六进制代码飘落 */
+@keyframes hex-fall {
+  0% { transform: translateY(-30px); opacity: 0; }
+  15% { opacity: 0.03; }
+  85% { opacity: 0.03; }
+  100% { transform: translateY(calc(100vh - 60px)); opacity: 0; }
+}
+
+/* Braindance 面板专用扫描线（3s 周期） */
+@keyframes scan-line-down {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(400px); }
+}
+
+/* ===== HUD 角括号装饰 ===== */
+@utility hud-corner {
+  position: relative;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-color: var(--color-neon-cyan);
+    opacity: 0.3;
+  }
+
+  &::before {
+    top: -4px;
+    left: -4px;
+    border-left: 2px solid;
+    border-top: 2px solid;
+  }
+
+  &::after {
+    bottom: -4px;
+    right: -4px;
+    border-right: 2px solid;
+    border-bottom: 2px solid;
+  }
+}
+
+/* ===== Glitch 文字效果 — 开场动画 ===== */
+@keyframes glitch-text {
+  0%,
+  84%,
+  100% {
+    clip-path: inset(0 0 0 0);
+    transform: translate(0);
+  }
+  85% {
+    clip-path: inset(2% 0 85% 0);
+    transform: translate(-2px, 2px);
+  }
+  86% {
+    clip-path: inset(40% 0 43% 0);
+    transform: translate(3px, -1px);
+  }
+  87% {
+    clip-path: inset(70% 0 10% 0);
+    transform: translate(-1px, 3px);
+  }
+  88% {
+    clip-path: inset(10% 0 70% 0);
+    transform: translate(2px, -2px);
+  }
+  89% {
+    clip-path: inset(85% 0 2% 0);
+    transform: translate(-3px, 1px);
+  }
+  90% {
+    clip-path: inset(30% 0 50% 0);
+    transform: translate(1px, -3px);
+  }
+  91% {
+    clip-path: inset(55% 0 35% 0);
+    transform: translate(-2px, 2px);
+  }
+  92% {
+    clip-path: inset(15% 0 75% 0);
+    transform: translate(4px, -1px);
+  }
+  93% {
+    clip-path: inset(65% 0 25% 0);
+    transform: translate(-1px, 1px);
+  }
+}
+
+@keyframes glitch-slice-1 {
+  0%,
+  84%,
+  100% {
+    opacity: 0;
+  }
+  85% {
+    opacity: 0.8;
+    clip-path: inset(20% 0 60% 0);
+    transform: translate(-3px, 3px);
+  }
+  87% {
+    opacity: 0.6;
+    clip-path: inset(50% 0 30% 0);
+    transform: translate(2px, -2px);
+  }
+  89% {
+    opacity: 0.4;
+    clip-path: inset(80% 0 5% 0);
+    transform: translate(-2px, 1px);
+  }
+  91% {
+    opacity: 0.5;
+    clip-path: inset(10% 0 80% 0);
+    transform: translate(3px, -1px);
+  }
+  93% {
+    opacity: 0.3;
+    clip-path: inset(60% 0 25% 0);
+    transform: translate(-1px, 3px);
+  }
+}
+
+@keyframes glitch-slice-2 {
+  0%,
+  84%,
+  100% {
+    opacity: 0;
+  }
+  85% {
+    opacity: 0.7;
+    clip-path: inset(60% 0 20% 0);
+    transform: translate(4px, -3px);
+  }
+  87% {
+    opacity: 0.5;
+    clip-path: inset(10% 0 70% 0);
+    transform: translate(-3px, 2px);
+  }
+  89% {
+    opacity: 0.6;
+    clip-path: inset(40% 0 40% 0);
+    transform: translate(2px, -4px);
+  }
+  91% {
+    opacity: 0.4;
+    clip-path: inset(70% 0 15% 0);
+    transform: translate(-4px, 1px);
+  }
+  93% {
+    opacity: 0.5;
+    clip-path: inset(30% 0 55% 0);
+    transform: translate(1px, -2px);
+  }
+}
+
+/* ===== Phase 4: QuestionInput 涟漪扩散 ===== */
+@keyframes ripple-expand {
+  0% { transform: scale(0.6) translate(-50%, -50%); opacity: 0.15; }
+  100% { transform: scale(2.2) translate(-50%, -50%); opacity: 0; }
+}
+
+/* ===== Phase 4: 深潜按钮点击脉冲 ===== */
+@keyframes pulse-click {
+  0% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.5), 0 0 0 0 rgba(180, 77, 255, 0.3); }
+  100% { box-shadow: 0 0 0 20px rgba(0, 240, 255, 0), 0 0 0 40px rgba(180, 77, 255, 0); }
+}
+
+/* ===== Intro 模式 — 开场动画纯黑背景 ===== */
+body.intro-mode {
+  background: var(--color-deep-space);
+}
+
+/* ===== 全息分隔线 ===== */
+@utility holographic-divider {
+  height: 1px;
+  border: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-neon-cyan) 50%,
+    transparent 100%
+  );
+  position: relative;
+
+  &::after {
+    content: "✦";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--color-neon-cyan);
+    font-size: 10px;
+    opacity: 0.5;
+    background: var(--color-deep-space);
+    padding: 0 8px;
+  }
+}
+
+/* ===== 深空径向渐变辅助 ===== */
+@utility bg-deep-radial {
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(0, 240, 255, 0.04) 0%,
+    transparent 60%
+  );
+}
+
+/* ===== 选中文本配色 ===== */
+::selection {
+  background: rgba(0, 240, 255, 0.2);
+  color: var(--color-neon-cyan);
+}
+
+/* ===== Phase 7: 牌库页陈列架网格 ===== */
+@utility shelf-grid {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 80px,
+    rgba(0, 240, 255, 0.03) 80px,
+    rgba(0, 240, 255, 0.03) 81px
+  );
+}
+
+/* ===== 聚焦环 ===== */
+:focus-visible {
+  outline: 2px solid var(--color-neon-cyan);
+  outline-offset: 2px;
+}
+
+/* ===== prefers-reduced-motion 全局降级 ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  body::after {
+    display: none; /* 关闭扫描线装饰 */
+  }
+}
