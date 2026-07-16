@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion } from "motion/react"
+import OracleGlyph from "@/components/icons/OracleGlyph"
 
 const navLinks = [
   { href: "/", label: "占卜" },
@@ -30,9 +31,10 @@ export default function Navbar({ isFullscreen = false }: Props) {
         {/* Logo */}
         <Link
           href="/"
+          aria-label="CyberTarot 2077"
           className="flex items-center gap-2 font-heading text-lg tracking-wider text-neon-cyan transition-colors hover:text-neon-cyan/80"
         >
-          <span className="text-xl">🎴</span>
+          <OracleGlyph name="brand" size={22} className="text-neon-cyan" />
           <span className="hidden sm:inline">CyberTarot</span>
           <span className="text-xs text-text-muted">2077</span>
         </Link>
