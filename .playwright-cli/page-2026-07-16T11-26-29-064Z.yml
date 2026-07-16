@@ -1,0 +1,132 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e66]: 关于 — CyberTarot 赛博占卜师 — CyberTarot 赛博占卜师
+  - navigation [ref=e826]:
+    - generic [ref=e827]:
+      - link "🎴 2077" [ref=e828] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e829]: 🎴
+        - generic [ref=e830]: "2077"
+      - generic [ref=e831]:
+        - link "占卜" [ref=e832] [cursor=pointer]:
+          - /url: /
+        - link "关于" [ref=e833] [cursor=pointer]:
+          - /url: /about
+        - link "牌库" [ref=e835] [cursor=pointer]:
+          - /url: /cards
+  - main [ref=e836]:
+    - generic [ref=e837]:
+      - heading "══ 關於 CyberTarot ══" [level=1] [ref=e838]
+      - paragraph [ref=e839]: 一個將古老塔羅智慧融入賽博龐克世界的 AI 占卜體驗。
+    - generic [ref=e840]:
+      - heading "▎概念故事" [level=2] [ref=e841]
+      - generic [ref=e842]:
+        - paragraph [ref=e843]: 2077 年，舊世界的物理紙張已成傳說。賽博先知們從數據廢墟中發掘出古老的手稿預言， 將它們保存在金屬畫框中——每一張都是一個「遺物卡牌」，承載著被遺忘的智慧碎片。
+        - paragraph [ref=e844]: 用戶通過 Braindance 神經接口接入賽博先知的意識網絡，AI 神諭核心會為其抽取三張遺物卡牌， 解讀過去留下的痕跡、此刻流動的能量、以及未來編織的可能性。
+        - paragraph [ref=e845]: 每一次占卜都是一次穿越數據洪流的精神旅程——在 0 與 1 的縫隙中，尋找屬於你的命運信號。
+      - blockquote [ref=e846]: 「在 0 與 1 的縫隙中，尋找屬於你的命運信號。」
+    - generic [ref=e847]: ✦
+    - generic [ref=e851]:
+      - generic [ref=e852]:
+        - generic [ref=e853]: "78"
+        - generic [ref=e854]: 遺物卡牌
+      - generic [ref=e855]:
+        - generic [ref=e856]: "3"
+        - generic [ref=e857]: 命運之牌
+      - generic [ref=e858]:
+        - generic [ref=e859]: "2"
+        - generic [ref=e860]: AI 神諭核心
+    - generic [ref=e861]: ✦
+    - generic [ref=e865]:
+      - heading "▎技術棧選型" [level=2] [ref=e866]
+      - generic [ref=e867]:
+        - generic [ref=e868]:
+          - paragraph [ref=e869]: Next.js 16 (App Router)
+          - paragraph [ref=e870]: React Server Components + 流式 SSR，自動代碼分割
+        - generic [ref=e871]:
+          - paragraph [ref=e872]: React Three Fiber
+          - paragraph [ref=e873]: 3D 翻牌桌與粒子背景，WebGL 加速渲染
+        - generic [ref=e874]:
+          - paragraph [ref=e875]: Motion (Framer Motion)
+          - paragraph [ref=e876]: 頁面過渡、段落浮現、輸入框抖動動畫
+        - generic [ref=e877]:
+          - paragraph [ref=e878]: DeepSeek API
+          - paragraph [ref=e879]: 流式 AI 占卜解讀，10s 超時 + 自動重試 + 模板降級
+        - generic [ref=e880]:
+          - paragraph [ref=e881]: Tailwind CSS v4
+          - paragraph [ref=e882]: 暗黑賽博配色系統，utility-first 樣式
+        - generic [ref=e883]:
+          - paragraph [ref=e884]: TypeScript
+          - paragraph [ref=e885]: 全量類型覆蓋，Zod schema 驗證（擴展）
+        - generic [ref=e886]:
+          - paragraph [ref=e887]: Sharp
+          - paragraph [ref=e888]: 78 張卡面 PNG → WebP 批量壓縮，平均 213KB/張
+        - generic [ref=e889]:
+          - paragraph [ref=e890]: pnpm
+          - paragraph [ref=e891]: 依賴管理，快照隔離，節省磁碟空間
+    - generic [ref=e892]: ✦
+    - generic [ref=e896]:
+      - heading "▎系統架構" [level=2] [ref=e897]
+      - generic [ref=e898]: ┌─────────────────────────────────────────────────────┐ │ 🖥 Client │ │ ┌──────────┐ ┌──────────┐ ┌───────────────────┐ │ │ │Braindance│──→│Question │──→│TarotTable3D(R3F) │ │ │ │Portal │ │Input │ │+ ParticleBg │ │ │ └──────────┘ └──────────┘ └────────┬──────────┘ │ │ │ │ │ ┌────────────────────────────────────▼───────────┐ │ │ │ ReadingStream (SSE 流式) │ │ │ └──────────────────────┬─────────────────────────┘ │ └─────────────────────────┼───────────────────────────┘ │ POST /api/reading ┌─────────────────────────▼───────────────────────────┐ │ 🖥 Server │ │ ┌───────────────────────────────────────────────┐ │ │ │ Route Handler /api/reading │ │ │ │ ├─ AbortController (客戶端斷開中止) │ │ │ │ ├─ 自動重試 (最多 2 次, 間隔 1s) │ │ │ │ └─ 全部失敗 → 模板降級 (5 套) │ │ │ └───────────────────┬───────────────────────────┘ │ │ │ DeepSeek API │ │ ┌───────────────────▼───────────────────────────┐ │ │ │ DeepSeek Chat (stream=true) │ │ │ │ 系統 Prompt ~600 字 + 用戶 Prompt │ │ │ └───────────────────────────────────────────────┘ │ └─────────────────────────────────────────────────────┘
+      - generic [ref=e900]:
+        - generic [ref=e901]: Client 端
+        - generic [ref=e903]: Server 端
+        - generic [ref=e905]: DeepSeek API
+        - generic [ref=e907]: ──→ 數據流向
+    - generic [ref=e908]: ✦
+    - generic [ref=e912]:
+      - heading "▎78 張塔羅牌數據" [level=2] [ref=e913]
+      - generic [ref=e914]:
+        - paragraph [ref=e915]:
+          - text: 全部 78 張牌（22 張大阿卡納 + 56 張小阿卡納）的數據以 TypeScript 常量定義在
+          - code [ref=e916]: src/data/cards.ts
+          - text: 中，每張牌包含：
+        - list [ref=e917]:
+          - listitem [ref=e918]:
+            - text: 唯一 ID（如
+            - code [ref=e919]: major_00
+            - text: 、
+            - code [ref=e920]: wands_05
+            - text: ）
+          - listitem [ref=e921]: 中英文名稱
+          - listitem [ref=e922]: 花色歸屬（大阿卡納 / 權杖 / 聖杯 / 寶劍 / 星幣）
+          - listitem [ref=e923]: 3 個關鍵詞
+          - listitem [ref=e924]: 正位 + 逆位釋義（各 ~50 字）
+          - listitem [ref=e925]:
+            - text: 自動注入
+            - code [ref=e926]: imagePath
+            - text: "（ /assets/cards/{id}.webp）"
+        - paragraph [ref=e927]: Fisher-Yates 洗牌算法 + mulberry32 種子隨機數生成器確保同一問題結果可復現。 正位概率 ~70%，逆位 ~30%。
+    - generic [ref=e928]: ✦
+    - generic [ref=e932]:
+      - heading "▎開發中解決的技術挑戰" [level=2] [ref=e933]
+      - generic [ref=e934]:
+        - generic [ref=e935]:
+          - generic [ref=e936]: ⚠ 故障代碼 0x1A
+          - paragraph [ref=e937]: 3D 翻牌動畫時序控制
+          - generic [ref=e938]:
+            - paragraph [ref=e939]: ▸ 問題：三張牌需要按「過去→現在→未來」順序翻轉，每張間隔 500ms，各自動畫時長 800ms。直接使用 React 狀態管理會導致動畫不同步。
+            - paragraph [ref=e940]: ▸ 解法：使用 useFrame + 手動 lerp 控制 rotation.y，配合 delay 參數實現精確時序。翻牌完成後自動觸發 phase 切換（useEffect timeout 2.5s）。
+        - generic [ref=e941]:
+          - generic [ref=e942]: ⚠ 故障代碼 0x2A
+          - paragraph [ref=e943]: 流式 SSE 段落切分 + 動畫
+          - generic [ref=e944]:
+            - paragraph [ref=e945]: "▸ 問題：DeepSeek 返回的 SSE 流需要按 ## 標題即時分割段落，且標題需先於正文 150ms 顯示。服務端返回的 chunk 可能在任何位置截斷。"
+            - paragraph [ref=e946]: ▸ 解法：客戶端維護 text buffer，每收到 chunk 就嘗試分割完整段落。維護 streamingParagraph 和 completed 兩個列表，標題與正文分開渲染。
+        - generic [ref=e947]:
+          - generic [ref=e948]: ⚠ 故障代碼 0x3A
+          - paragraph [ref=e949]: Vercel Hobby Plan 10s 超時 + API 降級
+          - generic [ref=e950]:
+            - paragraph [ref=e951]: ▸ 問題：Vercel Serverless 函數最多運行 10s，DeepSeek API 可能超時或不可用。面試場景要求零故障。
+            - paragraph [ref=e952]: ▸ 解法：Prompt 壓縮至 ~600 字，限制 max_tokens=1000。前端緩存 5 套模板解讀，3 次重試失敗後無感切換，用戶零感知。
+    - generic [ref=e953]: ✦
+    - generic [ref=e957]:
+      - paragraph [ref=e958]: 🚀 本項目是面試作品集的一部分
+      - paragraph [ref=e959]: CyberTarot 展示了全棧 AI 產品開發能力：Next.js App Router + 3D 渲染 + 流式 AI 集成 + 賽博 UI 設計 + 錯誤邊界降級策略。
+      - generic [ref=e960]:
+        - generic [ref=e961]: Next.js
+        - generic [ref=e962]: ✦
+        - generic [ref=e963]: R3F
+        - generic [ref=e964]: ✦
+        - generic [ref=e965]: DeepSeek
+        - generic [ref=e966]: ✦
+        - generic [ref=e967]: TypeScript

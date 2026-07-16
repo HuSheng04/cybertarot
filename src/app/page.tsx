@@ -18,7 +18,7 @@ import { CardSkeleton } from "@/components/CardSkeleton"
 import { R3FErrorBoundary } from "@/components/R3FErrorBoundary"
 import { BraindancePortal } from "@/components/BraindancePortal"
 import { QuestionInput } from "@/components/QuestionInput"
-import { ReadingStream } from "@/components/ReadingStream"
+import { ReadingSheet } from "@/components/ReadingSheet"
 import { DemoTrigger } from "@/components/DemoTrigger"
 import { useTarot } from "@/components/TarotProvider"
 import { useFirstVisit } from "@/lib/useFirstVisit"
@@ -91,8 +91,19 @@ export default function HomePage() {
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [phase])
 
+  /* ---- 活动卡牌位置（从阅读段落到 3D 桌面的桥梁）---- */
+  const [activePosition, setActivePosition] = useState<'past' | 'present' | 'future' | null>(null)
+
+  const handleActivePositionChange = useCallback(
+    (pos: 'past' | 'present' | 'future' | null) => {
+      setActivePosition(pos)
+    },
+    [],
+  )
+
   /* ---- 再来一次 ---- */
   const handleReset = useCallback(() => {
+    setActivePosition(null)
     reset()
     window.scrollTo({ top: 0, behavior: "smooth" })
   }, [reset])
@@ -224,7 +235,7 @@ export default function HomePage() {
             >
               <div className="flex flex-col items-center gap-4 text-center">
                 <div className="w-full rounded-xl border border-error/30 bg-error/5 px-6 py-5">
-                  <p className="mb-1 font-subheading text-sm text-error">⚠ 系统异常</p>
+                  <p className="mb-1 font-subheading text-sm text-error">系统异常</p>
                   <p className="text-sm text-text-secondary">{error || "未知错误"}</p>
                 </div>
 
@@ -308,6 +319,7 @@ export default function HomePage() {
                   isShuffling={phase === "shuffling"}
                   shouldFlip={shouldFlip}
                   lowPerformance={false}
+                  activePosition={activePosition}
                 />
               </Suspense>
             </R3FErrorBoundary>
@@ -316,32 +328,20 @@ export default function HomePage() {
       </AnimatePresence>
 
       {/* =============================== */}
-      {/*  解读 Overlay — 下半屏浮动      */}
+      {/*  解读 Overlay — ReadingSheet     */}
       {/*  （reading / done）             */}
       {/* =============================== */}
       <AnimatePresence>
         {showReading && cards.length > 0 && (
-          <motion.div
-            key="reading-overlay"
-            className="fixed bottom-0 left-0 right-0 z-40"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={springGentle}
-          >
-            {/* 顶部渐变过渡：透明 → 半透明背景 */}
-            <div className="max-h-[75dvh] overflow-y-auto bg-gradient-to-t from-deep-space/85 from-20% via-deep-space/60 via-60% to-transparent to-100% pt-12 backdrop-blur-sm">
-              <div className="mx-auto max-w-lg px-4 pb-8">
-                <ReadingStream
-                  cards={cards}
-                  question={question || "命运之问"}
-                  apiKey={apiKey || undefined}
-                  onReset={handleReset}
-                  onComplete={finishReading}
-                />
-              </div>
-            </div>
-          </motion.div>
+          <ReadingSheet
+            key="reading-sheet"
+            cards={cards}
+            question={question || "命运之问"}
+            apiKey={apiKey || undefined}
+            onReset={handleReset}
+            onComplete={finishReading}
+            onActivePositionChange={handleActivePositionChange}
+          />
         )}
       </AnimatePresence>
     </>

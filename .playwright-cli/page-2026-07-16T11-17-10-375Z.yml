@@ -1,0 +1,52 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "🎴 CyberTarot 2077" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e5]: 🎴
+        - generic [ref=e6]: CyberTarot
+        - generic [ref=e7]: "2077"
+      - generic [ref=e8]:
+        - link "占卜" [ref=e9] [cursor=pointer]:
+          - /url: /
+        - link "关于" [ref=e11] [cursor=pointer]:
+          - /url: /about
+        - link "牌库" [ref=e12] [cursor=pointer]:
+          - /url: /cards
+  - main [ref=e13]:
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - heading "赛博占卜师" [level=1] [ref=e16]
+        - paragraph [ref=e17]: 在数据的洪流中，寻找你的命运
+        - paragraph [ref=e18]: 2077 年，赛博先知为你抽取三张遗物卡牌，解读过去的痕迹、现在的能量和未来的可能。
+      - generic [ref=e23]:
+        - generic: "0x7F"
+        - generic: "0xE4"
+        - generic: "0x2A"
+        - generic: "0x9C"
+        - generic: "0x3B"
+        - generic: "0xD5"
+        - generic: "0xF1"
+        - generic: "0x8A"
+        - generic:
+          - generic: "[/"
+          - generic: /]
+          - generic: "[\\"
+          - generic: \]
+        - generic [ref=e24]:
+          - heading "接入 Braindance 神经接口" [level=2] [ref=e27]
+          - paragraph [ref=e28]: 选择连接方式以激活赛博先知
+        - generic [ref=e29]:
+          - button "使用服务端神谕核心 系统默认连接，无需额外配置 >>>" [ref=e30]:
+            - generic [ref=e31]:
+              - generic [ref=e35]:
+                - paragraph [ref=e36]: 使用服务端神谕核心
+                - paragraph [ref=e37]: 系统默认连接，无需额外配置
+              - generic [ref=e38]: ">>>"
+          - button "插入记忆芯片 粘贴自有 DeepSeek API Key >>>" [ref=e48]:
+            - generic [ref=e49]:
+              - generic [ref=e53]:
+                - paragraph [ref=e54]: 插入记忆芯片
+                - paragraph [ref=e55]: 粘贴自有 DeepSeek API Key
+              - generic [ref=e56]: ">>>"
+  - alert [ref=e66]

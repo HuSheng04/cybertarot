@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "node scripts/compress-cards.mjs",
-    "build": "next build",
+    "build:webpack": "next build --webpack",
+"build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "test": "jest --passWithNoTests"

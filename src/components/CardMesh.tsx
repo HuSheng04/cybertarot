@@ -21,6 +21,8 @@ type Props = {
   position?: [number, number, number]
   /** 位置标签（过去/现状/未来） */
   label?: string
+  /** 是否对应当前活动段落（边缘发光增强） */
+  isActive?: boolean
 }
 
 /**
@@ -39,6 +41,7 @@ export function CardMesh({
   flip = false,
   position = [0, 0, 0],
   label,
+  isActive = false,
 }: Props) {
   const meshRef = useRef<THREE.Mesh>(null)
   const materialRef = useRef<THREE.ShaderMaterial | null>(null)
@@ -55,6 +58,14 @@ export function CardMesh({
     progress: 0,
   })
   const timeRef = useRef(0)
+
+  /* ---- 翻牌后单次光晕脉冲（150–250ms）---- */
+  const revealTimeRef = useRef(0)
+
+  useEffect(() => {
+    if (!isRevealed) return
+    revealTimeRef.current = performance.now()
+  }, [isRevealed])
 
   /* ---- 触发翻转 ---- */
   useEffect(() => {
@@ -96,17 +107,27 @@ export function CardMesh({
       edgeGlowTimeRef.current += 0.016
       const t = edgeGlowTimeRef.current
 
+      // 翻牌瞬间光晕脉冲（150–250ms 单次衰减）
+      const flashElapsed = performance.now() - revealTimeRef.current
+      const flashIntensity = isRevealed && flashElapsed < 200
+        ? 0.7 * (1 - flashElapsed / 200)
+        : 0
+
+      // 活跃段落对应卡牌的克制增强
+      const activeBoost = isActive ? 0.25 : 0
+
       if (isReversed) {
         // 逆位：purple 色，时断时续（闪烁不稳定感）
         const flicker = Math.sin(t * 1.5) * 0.5 + 0.5
         const burst = Math.sin(t * 4.7) > 0.92 ? 1.5 : 0.8
-        const intensity = flicker * burst * 0.35
+        const intensity = Math.min(flicker * burst * 0.35 + flashIntensity + activeBoost, 1.0)
         mat.uniforms.uEdgeGlowIntensity.value = intensity
         mat.uniforms.uEdgeGlowColor.value.set("#b44dff")
       } else {
         // 正位：cyan 色，稳定匀速
         const pulse = Math.sin(t * 0.8) * 0.1 + 0.25
-        mat.uniforms.uEdgeGlowIntensity.value = pulse
+        const intensity = Math.min(pulse + flashIntensity + activeBoost, 1.0)
+        mat.uniforms.uEdgeGlowIntensity.value = intensity
         mat.uniforms.uEdgeGlowColor.value.set("#00f0ff")
       }
     }

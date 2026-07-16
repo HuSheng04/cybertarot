@@ -22,6 +22,8 @@ type Props = {
   shouldFlip?: boolean
   /** 是否低配模式 */
   lowPerformance?: boolean
+  /** 当前活动的卡牌位置 — 对应阅读区段 */
+  activePosition?: 'past' | 'present' | 'future' | null
 }
 
 /**
@@ -41,7 +43,7 @@ type Props = {
  *  500ms:  现状牌开始翻转 (800ms)
  *  1000ms: 未来牌开始翻转 (800ms)
  */
-function TarotTable3DScene({ cards, isShuffling = false, shouldFlip = false, lowPerformance = false }: Props) {
+function TarotTable3DScene({ cards, isShuffling = false, shouldFlip = false, lowPerformance = false, activePosition = null }: Props) {
   const [flipped, setFlipped] = useState(false)
 
   // Latch shouldFlip to true once it becomes true (render-phase update avoids effect)
@@ -62,6 +64,9 @@ function TarotTable3DScene({ cards, isShuffling = false, shouldFlip = false, low
   }, [flipped])
 
   const convergeProgress = (isShuffling && !shouldFlip) || (flipped && !convergeDelayed) ? 1 : 0
+
+  /* ---- 活动卡牌索引 ---- */
+  const activeIdx = activePosition === 'past' ? 0 : activePosition === 'present' ? 1 : activePosition === 'future' ? 2 : -1
 
   /* ---- 卡牌数据（无 cards 时使用占位） ---- */
   const cardPositions = useMemo<
@@ -110,7 +115,7 @@ function TarotTable3DScene({ cards, isShuffling = false, shouldFlip = false, low
 
       {/* ---- 三张卡牌 ---- */}
       <Suspense fallback={null}>
-        {cardPositions.map((c) => (
+        {cardPositions.map((c, i) => (
           <CardMesh
             key={c.label}
             label={!shouldFlip ? c.label : undefined}
@@ -119,6 +124,7 @@ function TarotTable3DScene({ cards, isShuffling = false, shouldFlip = false, low
             flip={flipped}
             isReversed={c.rev}
             textureUrl={c.url}
+            isActive={i === activeIdx}
           />
         ))}
       </Suspense>
@@ -144,7 +150,7 @@ const MemoizedScene = memo(TarotTable3DScene)
  * 由于 Canvas 需要在客户端创建，此组件应在父组件中通过
  * dynamic(() => import(...), { ssr: false }) 导入。
  */
-export function TarotTable3D({ cards, isShuffling, shouldFlip, lowPerformance }: Props) {
+export function TarotTable3D({ cards, isShuffling, shouldFlip, lowPerformance, activePosition }: Props) {
   return (
     <Canvas
       camera={{ position: [0, 0, 6], fov: 45, near: 0.1, far: 20 }}
@@ -169,6 +175,7 @@ export function TarotTable3D({ cards, isShuffling, shouldFlip, lowPerformance }:
         isShuffling={isShuffling}
         shouldFlip={shouldFlip}
         lowPerformance={lowPerformance}
+        activePosition={activePosition}
       />
     </Canvas>
   )

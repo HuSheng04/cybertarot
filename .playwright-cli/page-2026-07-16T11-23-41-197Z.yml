@@ -1,0 +1,662 @@
+- generic [ref=e1]:
+  - alert [ref=e66]
+  - navigation [ref=e88]:
+    - generic [ref=e89]:
+      - link "🎴 CyberTarot 2077" [ref=e90] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e91]: 🎴
+        - generic [ref=e92]: CyberTarot
+        - generic [ref=e93]: "2077"
+      - generic [ref=e94]:
+        - link "占卜" [ref=e95] [cursor=pointer]:
+          - /url: /
+        - link "关于" [ref=e96] [cursor=pointer]:
+          - /url: /about
+        - link "牌库" [ref=e97] [cursor=pointer]:
+          - /url: /cards
+  - main [ref=e99]:
+    - generic [ref=e100]:
+      - heading "══ 牌库 ══" [level=1] [ref=e101]
+      - paragraph [ref=e102]: 全部 78 张遗物卡牌，点击查看正逆位释义
+    - generic [ref=e103]:
+      - button "全部" [ref=e104]
+      - button "大阿卡纳" [ref=e106]
+      - button "权杖(权杖)" [active] [ref=e822]:
+        - text: 权杖
+        - generic [ref=e823]: (权杖)
+      - button "圣杯" [ref=e108]
+      - button "宝剑" [ref=e109]
+      - button "星币" [ref=e110]
+    - paragraph [ref=e111]: 显示 14 / 78 张
+    - generic [ref=e112]:
+      - generic [ref=e113] [cursor=pointer]:
+        - generic [ref=e114]:
+          - img "愚人 (The Fool)" [ref=e115]
+          - generic [ref=e116]: "[ 收起 ]"
+        - generic [ref=e118]:
+          - paragraph [ref=e119]: 愚人
+          - paragraph [ref=e120]: The Fool
+          - paragraph [ref=e121]: 新生 · 冒险 · 天真 · 无限可能
+        - generic [ref=e815]:
+          - generic [ref=e816]:
+            - paragraph [ref=e817]: ▲ 正位
+            - paragraph [ref=e818]: 新的开始、冒险的召唤，怀抱信念踏上未知旅程。放下过去的包袱，以开放心态迎接命运的礼物。
+          - generic [ref=e819]:
+            - paragraph [ref=e820]: ▼ 逆位
+            - paragraph [ref=e821]: 鲁莽行事、冒险的代价，过度天真可能导致危险。需要停下来审视脚下的悬崖。
+      - generic [ref=e122] [cursor=pointer]:
+        - generic [ref=e123]:
+          - img "魔术师 (The Magician)" [ref=e124]
+          - generic [ref=e125]: "[ 查看详情 ]"
+        - generic [ref=e127]:
+          - paragraph [ref=e128]: 魔术师
+          - paragraph [ref=e129]: The Magician
+          - paragraph [ref=e130]: 创造 · 专注 · 技能 · 资源整合
+      - generic [ref=e131] [cursor=pointer]:
+        - generic [ref=e132]:
+          - img "女祭司 (The High Priestess)" [ref=e133]
+          - generic [ref=e134]: "[ 查看详情 ]"
+        - generic [ref=e136]:
+          - paragraph [ref=e137]: 女祭司
+          - paragraph [ref=e138]: The High Priestess
+          - paragraph [ref=e139]: 直觉 · 潜意识 · 内在智慧 · 神秘
+      - generic [ref=e140] [cursor=pointer]:
+        - generic [ref=e141]:
+          - img "女皇 (The Empress)" [ref=e142]
+          - generic [ref=e143]: "[ 查看详情 ]"
+        - generic [ref=e145]:
+          - paragraph [ref=e146]: 女皇
+          - paragraph [ref=e147]: The Empress
+          - paragraph [ref=e148]: 丰收 · 母性 · 富饶 · 自然之美
+      - generic [ref=e149] [cursor=pointer]:
+        - generic [ref=e150]:
+          - img "皇帝 (The Emperor)" [ref=e151]
+          - generic [ref=e152]: "[ 查看详情 ]"
+        - generic [ref=e154]:
+          - paragraph [ref=e155]: 皇帝
+          - paragraph [ref=e156]: The Emperor
+          - paragraph [ref=e157]: 权力 · 秩序 · 权威 · 掌控
+      - generic [ref=e158] [cursor=pointer]:
+        - generic [ref=e159]:
+          - img "教皇 (The Hierophant)" [ref=e160]
+          - generic [ref=e161]: "[ 查看详情 ]"
+        - generic [ref=e163]:
+          - paragraph [ref=e164]: 教皇
+          - paragraph [ref=e165]: The Hierophant
+          - paragraph [ref=e166]: 传统 · 信仰 · 导师 · 传承
+      - generic [ref=e167] [cursor=pointer]:
+        - generic [ref=e168]:
+          - img "恋人 (The Lovers)" [ref=e169]
+          - generic [ref=e170]: "[ 查看详情 ]"
+        - generic [ref=e172]:
+          - paragraph [ref=e173]: 恋人
+          - paragraph [ref=e174]: The Lovers
+          - paragraph [ref=e175]: 选择 · 结合 · 关系 · 价值观
+      - generic [ref=e176] [cursor=pointer]:
+        - generic [ref=e177]:
+          - img "战车 (The Chariot)" [ref=e178]
+          - generic [ref=e179]: "[ 查看详情 ]"
+        - generic [ref=e181]:
+          - paragraph [ref=e182]: 战车
+          - paragraph [ref=e183]: The Chariot
+          - paragraph [ref=e184]: 胜利 · 意志力 · 征服 · 自信
+      - generic [ref=e185] [cursor=pointer]:
+        - generic [ref=e186]:
+          - img "力量 (Strength)" [ref=e187]
+          - generic [ref=e188]: "[ 查看详情 ]"
+        - generic [ref=e190]:
+          - paragraph [ref=e191]: 力量
+          - paragraph [ref=e192]: Strength
+          - paragraph [ref=e193]: 勇气 · 内在力量 · 耐心 · 温柔掌控
+      - generic [ref=e194] [cursor=pointer]:
+        - generic [ref=e195]:
+          - img "隐士 (The Hermit)" [ref=e196]
+          - generic [ref=e197]: "[ 查看详情 ]"
+        - generic [ref=e199]:
+          - paragraph [ref=e200]: 隐士
+          - paragraph [ref=e201]: The Hermit
+          - paragraph [ref=e202]: 内省 · 独处 · 智慧 · 指引
+      - generic [ref=e203] [cursor=pointer]:
+        - generic [ref=e204]:
+          - img "命运之轮 (Wheel of Fortune)" [ref=e205]
+          - generic [ref=e206]: "[ 查看详情 ]"
+        - generic [ref=e208]:
+          - paragraph [ref=e209]: 命运之轮
+          - paragraph [ref=e210]: Wheel of Fortune
+          - paragraph [ref=e211]: 命运 · 转折点 · 循环 · 机遇
+      - generic [ref=e212] [cursor=pointer]:
+        - generic [ref=e213]:
+          - img "正义 (Justice)" [ref=e214]
+          - generic [ref=e215]: "[ 查看详情 ]"
+        - generic [ref=e217]:
+          - paragraph [ref=e218]: 正义
+          - paragraph [ref=e219]: Justice
+          - paragraph [ref=e220]: 公正 · 真理 · 平衡 · 因果报应
+      - generic [ref=e221] [cursor=pointer]:
+        - generic [ref=e222]:
+          - img "倒吊人 (The Hanged Man)" [ref=e223]
+          - generic [ref=e224]: "[ 查看详情 ]"
+        - generic [ref=e226]:
+          - paragraph [ref=e227]: 倒吊人
+          - paragraph [ref=e228]: The Hanged Man
+          - paragraph [ref=e229]: 牺牲 · 暂停 · 新视角 · 顺其自然
+      - generic [ref=e230] [cursor=pointer]:
+        - generic [ref=e231]:
+          - img "死神 (Death)" [ref=e232]
+          - generic [ref=e233]: "[ 查看详情 ]"
+        - generic [ref=e235]:
+          - paragraph [ref=e236]: 死神
+          - paragraph [ref=e237]: Death
+          - paragraph [ref=e238]: 终结 · 转变 · 重生 · 放下
+      - generic [ref=e239] [cursor=pointer]:
+        - generic [ref=e240]:
+          - img "节制 (Temperance)" [ref=e241]
+          - generic [ref=e242]: "[ 查看详情 ]"
+        - generic [ref=e244]:
+          - paragraph [ref=e245]: 节制
+          - paragraph [ref=e246]: Temperance
+          - paragraph [ref=e247]: 平衡 · 调和 · 耐心 · 中庸之道
+      - generic [ref=e248] [cursor=pointer]:
+        - generic [ref=e249]:
+          - img "恶魔 (The Devil)" [ref=e250]
+          - generic [ref=e251]: "[ 查看详情 ]"
+        - generic [ref=e253]:
+          - paragraph [ref=e254]: 恶魔
+          - paragraph [ref=e255]: The Devil
+          - paragraph [ref=e256]: 束缚 · 物质主义 · 执念 · 阴影
+      - generic [ref=e257] [cursor=pointer]:
+        - generic [ref=e258]:
+          - img "高塔 (The Tower)" [ref=e259]
+          - generic [ref=e260]: "[ 查看详情 ]"
+        - generic [ref=e262]:
+          - paragraph [ref=e263]: 高塔
+          - paragraph [ref=e264]: The Tower
+          - paragraph [ref=e265]: 剧变 · 崩塌 · 启示 · 重建
+      - generic [ref=e266] [cursor=pointer]:
+        - generic [ref=e267]:
+          - img "星星 (The Star)" [ref=e268]
+          - generic [ref=e269]: "[ 查看详情 ]"
+        - generic [ref=e271]:
+          - paragraph [ref=e272]: 星星
+          - paragraph [ref=e273]: The Star
+          - paragraph [ref=e274]: 希望 · 灵感 · 平静 · 治愈
+      - generic [ref=e275] [cursor=pointer]:
+        - generic [ref=e276]:
+          - img "月亮 (The Moon)" [ref=e277]
+          - generic [ref=e278]: "[ 查看详情 ]"
+        - generic [ref=e280]:
+          - paragraph [ref=e281]: 月亮
+          - paragraph [ref=e282]: The Moon
+          - paragraph [ref=e283]: 幻象 · 恐惧 · 潜意识 · 未知
+      - generic [ref=e284] [cursor=pointer]:
+        - generic [ref=e285]:
+          - img "太阳 (The Sun)" [ref=e286]
+          - generic [ref=e287]: "[ 查看详情 ]"
+        - generic [ref=e289]:
+          - paragraph [ref=e290]: 太阳
+          - paragraph [ref=e291]: The Sun
+          - paragraph [ref=e292]: 喜悦 · 成功 · 活力 · 光明
+      - generic [ref=e293] [cursor=pointer]:
+        - generic [ref=e294]:
+          - img "审判 (Judgement)" [ref=e295]
+          - generic [ref=e296]: "[ 查看详情 ]"
+        - generic [ref=e298]:
+          - paragraph [ref=e299]: 审判
+          - paragraph [ref=e300]: Judgement
+          - paragraph [ref=e301]: 觉醒 · 重生 · 召唤 · 自我评估
+      - generic [ref=e302] [cursor=pointer]:
+        - generic [ref=e303]:
+          - img "世界 (The World)" [ref=e304]
+          - generic [ref=e305]: "[ 查看详情 ]"
+        - generic [ref=e307]:
+          - paragraph [ref=e308]: 世界
+          - paragraph [ref=e309]: The World
+          - paragraph [ref=e310]: 完成 · 圆满 · 整合 · 旅程终章
+      - generic [ref=e311] [cursor=pointer]:
+        - generic [ref=e312]:
+          - img "权杖王牌 (Ace of Wands)" [ref=e313]
+          - generic [ref=e314]: "[ 查看详情 ]"
+        - generic [ref=e316]:
+          - paragraph [ref=e317]: 权杖王牌
+          - paragraph [ref=e318]: Ace of Wands
+          - paragraph [ref=e319]: 灵感 · 新起点 · 创造力 · 激情
+      - generic [ref=e320] [cursor=pointer]:
+        - generic [ref=e321]:
+          - img "权杖二 (Two of Wands)" [ref=e322]
+          - generic [ref=e323]: "[ 查看详情 ]"
+        - generic [ref=e325]:
+          - paragraph [ref=e326]: 权杖二
+          - paragraph [ref=e327]: Two of Wands
+          - paragraph [ref=e328]: 规划 · 展望 · 选择 · 扩张
+      - generic [ref=e329] [cursor=pointer]:
+        - generic [ref=e330]:
+          - img "权杖三 (Three of Wands)" [ref=e331]
+          - generic [ref=e332]: "[ 查看详情 ]"
+        - generic [ref=e334]:
+          - paragraph [ref=e335]: 权杖三
+          - paragraph [ref=e336]: Three of Wands
+          - paragraph [ref=e337]: 远见 · 探索 · 合作 · 进展
+      - generic [ref=e338] [cursor=pointer]:
+        - generic [ref=e339]:
+          - img "权杖四 (Four of Wands)" [ref=e340]
+          - generic [ref=e341]: "[ 查看详情 ]"
+        - generic [ref=e343]:
+          - paragraph [ref=e344]: 权杖四
+          - paragraph [ref=e345]: Four of Wands
+          - paragraph [ref=e346]: 庆祝 · 归属 · 安定 · 和谐
+      - generic [ref=e347] [cursor=pointer]:
+        - generic [ref=e348]:
+          - img "权杖五 (Five of Wands)" [ref=e349]
+          - generic [ref=e350]: "[ 查看详情 ]"
+        - generic [ref=e352]:
+          - paragraph [ref=e353]: 权杖五
+          - paragraph [ref=e354]: Five of Wands
+          - paragraph [ref=e355]: 竞争 · 冲突 · 混乱 · 多样性
+      - generic [ref=e356] [cursor=pointer]:
+        - generic [ref=e357]:
+          - img "权杖六 (Six of Wands)" [ref=e358]
+          - generic [ref=e359]: "[ 查看详情 ]"
+        - generic [ref=e361]:
+          - paragraph [ref=e362]: 权杖六
+          - paragraph [ref=e363]: Six of Wands
+          - paragraph [ref=e364]: 胜利 · 认可 · 声誉 · 赞美
+      - generic [ref=e365] [cursor=pointer]:
+        - generic [ref=e366]:
+          - img "权杖七 (Seven of Wands)" [ref=e367]
+          - generic [ref=e368]: "[ 查看详情 ]"
+        - generic [ref=e370]:
+          - paragraph [ref=e371]: 权杖七
+          - paragraph [ref=e372]: Seven of Wands
+          - paragraph [ref=e373]: 防守 · 坚持 · 逆境 · 挑战
+      - generic [ref=e374] [cursor=pointer]:
+        - generic [ref=e375]:
+          - img "权杖八 (Eight of Wands)" [ref=e376]
+          - generic [ref=e377]: "[ 查看详情 ]"
+        - generic [ref=e379]:
+          - paragraph [ref=e380]: 权杖八
+          - paragraph [ref=e381]: Eight of Wands
+          - paragraph [ref=e382]: 速度 · 进展 · 行动 · 通信
+      - generic [ref=e383] [cursor=pointer]:
+        - generic [ref=e384]:
+          - img "权杖九 (Nine of Wands)" [ref=e385]
+          - generic [ref=e386]: "[ 查看详情 ]"
+        - generic [ref=e388]:
+          - paragraph [ref=e389]: 权杖九
+          - paragraph [ref=e390]: Nine of Wands
+          - paragraph [ref=e391]: 坚持 · 韧性 · 警惕 · 最后防线
+      - generic [ref=e392] [cursor=pointer]:
+        - generic [ref=e393]:
+          - img "权杖十 (Ten of Wands)" [ref=e394]
+          - generic [ref=e395]: "[ 查看详情 ]"
+        - generic [ref=e397]:
+          - paragraph [ref=e398]: 权杖十
+          - paragraph [ref=e399]: Ten of Wands
+          - paragraph [ref=e400]: 重负 · 压力 · 责任 · 负荷
+      - generic [ref=e401] [cursor=pointer]:
+        - generic [ref=e402]:
+          - img "权杖侍从 (Page of Wands)" [ref=e403]
+          - generic [ref=e404]: "[ 查看详情 ]"
+        - generic [ref=e406]:
+          - paragraph [ref=e407]: 权杖侍从
+          - paragraph [ref=e408]: Page of Wands
+          - paragraph [ref=e409]: 探索 · 热情 · 消息 · 新发现
+      - generic [ref=e410] [cursor=pointer]:
+        - generic [ref=e411]:
+          - img "权杖骑士 (Knight of Wands)" [ref=e412]
+          - generic [ref=e413]: "[ 查看详情 ]"
+        - generic [ref=e415]:
+          - paragraph [ref=e416]: 权杖骑士
+          - paragraph [ref=e417]: Knight of Wands
+          - paragraph [ref=e418]: 冒险 · 冲动 · 魅力 · 行动派
+      - generic [ref=e419] [cursor=pointer]:
+        - generic [ref=e420]:
+          - img "权杖王后 (Queen of Wands)" [ref=e421]
+          - generic [ref=e422]: "[ 查看详情 ]"
+        - generic [ref=e424]:
+          - paragraph [ref=e425]: 权杖王后
+          - paragraph [ref=e426]: Queen of Wands
+          - paragraph [ref=e427]: 自信 · 温暖 · 果断 · 魅力领导
+      - generic [ref=e428] [cursor=pointer]:
+        - generic [ref=e429]:
+          - img "权杖国王 (King of Wands)" [ref=e430]
+          - generic [ref=e431]: "[ 查看详情 ]"
+        - generic [ref=e433]:
+          - paragraph [ref=e434]: 权杖国王
+          - paragraph [ref=e435]: King of Wands
+          - paragraph [ref=e436]: 领导力 · 远见 · 创业 · 荣誉
+      - generic [ref=e437] [cursor=pointer]:
+        - generic [ref=e438]:
+          - img "圣杯王牌 (Ace of Cups)" [ref=e439]
+          - generic [ref=e440]: "[ 查看详情 ]"
+        - generic [ref=e442]:
+          - paragraph [ref=e443]: 圣杯王牌
+          - paragraph [ref=e444]: Ace of Cups
+          - paragraph [ref=e445]: 爱 · 情感开端 · 直觉 · 丰沛
+      - generic [ref=e446] [cursor=pointer]:
+        - generic [ref=e447]:
+          - img "圣杯二 (Two of Cups)" [ref=e448]
+          - generic [ref=e449]: "[ 查看详情 ]"
+        - generic [ref=e451]:
+          - paragraph [ref=e452]: 圣杯二
+          - paragraph [ref=e453]: Two of Cups
+          - paragraph [ref=e454]: 联结 · 平等 · 吸引 · 合一
+      - generic [ref=e455] [cursor=pointer]:
+        - generic [ref=e456]:
+          - img "圣杯三 (Three of Cups)" [ref=e457]
+          - generic [ref=e458]: "[ 查看详情 ]"
+        - generic [ref=e460]:
+          - paragraph [ref=e461]: 圣杯三
+          - paragraph [ref=e462]: Three of Cups
+          - paragraph [ref=e463]: 庆祝 · 友谊 · 丰收 · 姐妹情
+      - generic [ref=e464] [cursor=pointer]:
+        - generic [ref=e465]:
+          - img "圣杯四 (Four of Cups)" [ref=e466]
+          - generic [ref=e467]: "[ 查看详情 ]"
+        - generic [ref=e469]:
+          - paragraph [ref=e470]: 圣杯四
+          - paragraph [ref=e471]: Four of Cups
+          - paragraph [ref=e472]: 冥想 · 冷漠 · 不满 · 内省
+      - generic [ref=e473] [cursor=pointer]:
+        - generic [ref=e474]:
+          - img "圣杯五 (Five of Cups)" [ref=e475]
+          - generic [ref=e476]: "[ 查看详情 ]"
+        - generic [ref=e478]:
+          - paragraph [ref=e479]: 圣杯五
+          - paragraph [ref=e480]: Five of Cups
+          - paragraph [ref=e481]: 失落 · 悲伤 · 遗憾 · 放下
+      - generic [ref=e482] [cursor=pointer]:
+        - generic [ref=e483]:
+          - img "圣杯六 (Six of Cups)" [ref=e484]
+          - generic [ref=e485]: "[ 查看详情 ]"
+        - generic [ref=e487]:
+          - paragraph [ref=e488]: 圣杯六
+          - paragraph [ref=e489]: Six of Cups
+          - paragraph [ref=e490]: 怀旧 · 纯真 · 回忆 · 善意
+      - generic [ref=e491] [cursor=pointer]:
+        - generic [ref=e492]:
+          - img "圣杯七 (Seven of Cups)" [ref=e493]
+          - generic [ref=e494]: "[ 查看详情 ]"
+        - generic [ref=e496]:
+          - paragraph [ref=e497]: 圣杯七
+          - paragraph [ref=e498]: Seven of Cups
+          - paragraph [ref=e499]: 幻象 · 选择 · 欲望 · 白日梦
+      - generic [ref=e500] [cursor=pointer]:
+        - generic [ref=e501]:
+          - img "圣杯八 (Eight of Cups)" [ref=e502]
+          - generic [ref=e503]: "[ 查看详情 ]"
+        - generic [ref=e505]:
+          - paragraph [ref=e506]: 圣杯八
+          - paragraph [ref=e507]: Eight of Cups
+          - paragraph [ref=e508]: 放手 · 追求更深 · 转变 · 精神探索
+      - generic [ref=e509] [cursor=pointer]:
+        - generic [ref=e510]:
+          - img "圣杯九 (Nine of Cups)" [ref=e511]
+          - generic [ref=e512]: "[ 查看详情 ]"
+        - generic [ref=e514]:
+          - paragraph [ref=e515]: 圣杯九
+          - paragraph [ref=e516]: Nine of Cups
+          - paragraph [ref=e517]: 满足 · 实现 · 自豪 · 享乐
+      - generic [ref=e518] [cursor=pointer]:
+        - generic [ref=e519]:
+          - img "圣杯十 (Ten of Cups)" [ref=e520]
+          - generic [ref=e521]: "[ 查看详情 ]"
+        - generic [ref=e523]:
+          - paragraph [ref=e524]: 圣杯十
+          - paragraph [ref=e525]: Ten of Cups
+          - paragraph [ref=e526]: 幸福 · 圆满 · 家庭和谐 · 真爱
+      - generic [ref=e527] [cursor=pointer]:
+        - generic [ref=e528]:
+          - img "圣杯侍从 (Page of Cups)" [ref=e529]
+          - generic [ref=e530]: "[ 查看详情 ]"
+        - generic [ref=e532]:
+          - paragraph [ref=e533]: 圣杯侍从
+          - paragraph [ref=e534]: Page of Cups
+          - paragraph [ref=e535]: 敏感 · 创意 · 直觉讯息 · 天真
+      - generic [ref=e536] [cursor=pointer]:
+        - generic [ref=e537]:
+          - img "圣杯骑士 (Knight of Cups)" [ref=e538]
+          - generic [ref=e539]: "[ 查看详情 ]"
+        - generic [ref=e541]:
+          - paragraph [ref=e542]: 圣杯骑士
+          - paragraph [ref=e543]: Knight of Cups
+          - paragraph [ref=e544]: 浪漫 · 追求 · 理想主义 · 邀请
+      - generic [ref=e545] [cursor=pointer]:
+        - generic [ref=e546]:
+          - img "圣杯王后 (Queen of Cups)" [ref=e547]
+          - generic [ref=e548]: "[ 查看详情 ]"
+        - generic [ref=e550]:
+          - paragraph [ref=e551]: 圣杯王后
+          - paragraph [ref=e552]: Queen of Cups
+          - paragraph [ref=e553]: 慈悲 · 直觉 · 疗愈 · 理解
+      - generic [ref=e554] [cursor=pointer]:
+        - generic [ref=e555]:
+          - img "圣杯国王 (King of Cups)" [ref=e556]
+          - generic [ref=e557]: "[ 查看详情 ]"
+        - generic [ref=e559]:
+          - paragraph [ref=e560]: 圣杯国王
+          - paragraph [ref=e561]: King of Cups
+          - paragraph [ref=e562]: 情感成熟 · 睿智 · 冷静 · 外交
+      - generic [ref=e563] [cursor=pointer]:
+        - generic [ref=e564]:
+          - img "宝剑王牌 (Ace of Swords)" [ref=e565]
+          - generic [ref=e566]: "[ 查看详情 ]"
+        - generic [ref=e568]:
+          - paragraph [ref=e569]: 宝剑王牌
+          - paragraph [ref=e570]: Ace of Swords
+          - paragraph [ref=e571]: 真理 · 突破 · 清晰 · 正义之剑
+      - generic [ref=e572] [cursor=pointer]:
+        - generic [ref=e573]:
+          - img "宝剑二 (Two of Swords)" [ref=e574]
+          - generic [ref=e575]: "[ 查看详情 ]"
+        - generic [ref=e577]:
+          - paragraph [ref=e578]: 宝剑二
+          - paragraph [ref=e579]: Two of Swords
+          - paragraph [ref=e580]: 僵局 · 回避 · 抉择 · 平衡
+      - generic [ref=e581] [cursor=pointer]:
+        - generic [ref=e582]:
+          - img "宝剑三 (Three of Swords)" [ref=e583]
+          - generic [ref=e584]: "[ 查看详情 ]"
+        - generic [ref=e586]:
+          - paragraph [ref=e587]: 宝剑三
+          - paragraph [ref=e588]: Three of Swords
+          - paragraph [ref=e589]: 心碎 · 痛苦 · 失落 · 真相之痛
+      - generic [ref=e590] [cursor=pointer]:
+        - generic [ref=e591]:
+          - img "宝剑四 (Four of Swords)" [ref=e592]
+          - generic [ref=e593]: "[ 查看详情 ]"
+        - generic [ref=e595]:
+          - paragraph [ref=e596]: 宝剑四
+          - paragraph [ref=e597]: Four of Swords
+          - paragraph [ref=e598]: 休息 · 冥想 · 恢复 · 避难
+      - generic [ref=e599] [cursor=pointer]:
+        - generic [ref=e600]:
+          - img "宝剑五 (Five of Swords)" [ref=e601]
+          - generic [ref=e602]: "[ 查看详情 ]"
+        - generic [ref=e604]:
+          - paragraph [ref=e605]: 宝剑五
+          - paragraph [ref=e606]: Five of Swords
+          - paragraph [ref=e607]: 冲突 · 败局 · 损失 · 空欢喜
+      - generic [ref=e608] [cursor=pointer]:
+        - generic [ref=e609]:
+          - img "宝剑六 (Six of Swords)" [ref=e610]
+          - generic [ref=e611]: "[ 查看详情 ]"
+        - generic [ref=e613]:
+          - paragraph [ref=e614]: 宝剑六
+          - paragraph [ref=e615]: Six of Swords
+          - paragraph [ref=e616]: 过渡 · 疗愈之旅 · 放下 · 前进
+      - generic [ref=e617] [cursor=pointer]:
+        - generic [ref=e618]:
+          - img "宝剑七 (Seven of Swords)" [ref=e619]
+          - generic [ref=e620]: "[ 查看详情 ]"
+        - generic [ref=e622]:
+          - paragraph [ref=e623]: 宝剑七
+          - paragraph [ref=e624]: Seven of Swords
+          - paragraph [ref=e625]: 策略 · 隐秘 · 欺骗 · 智取
+      - generic [ref=e626] [cursor=pointer]:
+        - generic [ref=e627]:
+          - img "宝剑八 (Eight of Swords)" [ref=e628]
+          - generic [ref=e629]: "[ 查看详情 ]"
+        - generic [ref=e631]:
+          - paragraph [ref=e632]: 宝剑八
+          - paragraph [ref=e633]: Eight of Swords
+          - paragraph [ref=e634]: 束缚 · 自我设限 · 无力感 · 被困
+      - generic [ref=e635] [cursor=pointer]:
+        - generic [ref=e636]:
+          - img "宝剑九 (Nine of Swords)" [ref=e637]
+          - generic [ref=e638]: "[ 查看详情 ]"
+        - generic [ref=e640]:
+          - paragraph [ref=e641]: 宝剑九
+          - paragraph [ref=e642]: Nine of Swords
+          - paragraph [ref=e643]: 焦虑 · 噩梦 · 忧虑 · 失眠
+      - generic [ref=e644] [cursor=pointer]:
+        - generic [ref=e645]:
+          - img "宝剑十 (Ten of Swords)" [ref=e646]
+          - generic [ref=e647]: "[ 查看详情 ]"
+        - generic [ref=e649]:
+          - paragraph [ref=e650]: 宝剑十
+          - paragraph [ref=e651]: Ten of Swords
+          - paragraph [ref=e652]: 终结 · 谷底 · 背刺 · 重创
+      - generic [ref=e653] [cursor=pointer]:
+        - generic [ref=e654]:
+          - img "宝剑侍从 (Page of Swords)" [ref=e655]
+          - generic [ref=e656]: "[ 查看详情 ]"
+        - generic [ref=e658]:
+          - paragraph [ref=e659]: 宝剑侍从
+          - paragraph [ref=e660]: Page of Swords
+          - paragraph [ref=e661]: 好奇 · 思想 · 沟通 · 警觉
+      - generic [ref=e662] [cursor=pointer]:
+        - generic [ref=e663]:
+          - img "宝剑骑士 (Knight of Swords)" [ref=e664]
+          - generic [ref=e665]: "[ 查看详情 ]"
+        - generic [ref=e667]:
+          - paragraph [ref=e668]: 宝剑骑士
+          - paragraph [ref=e669]: Knight of Swords
+          - paragraph [ref=e670]: 冲刺 · 果断 · 理论 · 行动派
+      - generic [ref=e671] [cursor=pointer]:
+        - generic [ref=e672]:
+          - img "宝剑王后 (Queen of Swords)" [ref=e673]
+          - generic [ref=e674]: "[ 查看详情 ]"
+        - generic [ref=e676]:
+          - paragraph [ref=e677]: 宝剑王后
+          - paragraph [ref=e678]: Queen of Swords
+          - paragraph [ref=e679]: 独立 · 洞察 · 公正 · 清晰表达
+      - generic [ref=e680] [cursor=pointer]:
+        - generic [ref=e681]:
+          - img "宝剑国王 (King of Swords)" [ref=e682]
+          - generic [ref=e683]: "[ 查看详情 ]"
+        - generic [ref=e685]:
+          - paragraph [ref=e686]: 宝剑国王
+          - paragraph [ref=e687]: King of Swords
+          - paragraph [ref=e688]: 权威 · 逻辑 · 专业 · 实话实说
+      - generic [ref=e689] [cursor=pointer]:
+        - generic [ref=e690]:
+          - img "星币王牌 (Ace of Pentacles)" [ref=e691]
+          - generic [ref=e692]: "[ 查看详情 ]"
+        - generic [ref=e694]:
+          - paragraph [ref=e695]: 星币王牌
+          - paragraph [ref=e696]: Ace of Pentacles
+          - paragraph [ref=e697]: 新财务 · 机遇 · 物质开端 · 落地
+      - generic [ref=e698] [cursor=pointer]:
+        - generic [ref=e699]:
+          - img "星币二 (Two of Pentacles)" [ref=e700]
+          - generic [ref=e701]: "[ 查看详情 ]"
+        - generic [ref=e703]:
+          - paragraph [ref=e704]: 星币二
+          - paragraph [ref=e705]: Two of Pentacles
+          - paragraph [ref=e706]: 平衡 · 适应 · 多任务 · 变化
+      - generic [ref=e707] [cursor=pointer]:
+        - generic [ref=e708]:
+          - img "星币三 (Three of Pentacles)" [ref=e709]
+          - generic [ref=e710]: "[ 查看详情 ]"
+        - generic [ref=e712]:
+          - paragraph [ref=e713]: 星币三
+          - paragraph [ref=e714]: Three of Pentacles
+          - paragraph [ref=e715]: 合作 · 技艺 · 团队 · 学徒
+      - generic [ref=e716] [cursor=pointer]:
+        - generic [ref=e717]:
+          - img "星币四 (Four of Pentacles)" [ref=e718]
+          - generic [ref=e719]: "[ 查看详情 ]"
+        - generic [ref=e721]:
+          - paragraph [ref=e722]: 星币四
+          - paragraph [ref=e723]: Four of Pentacles
+          - paragraph [ref=e724]: 守财 · 控制 · 吝啬 · 稳定
+      - generic [ref=e725] [cursor=pointer]:
+        - generic [ref=e726]:
+          - img "星币五 (Five of Pentacles)" [ref=e727]
+          - generic [ref=e728]: "[ 查看详情 ]"
+        - generic [ref=e730]:
+          - paragraph [ref=e731]: 星币五
+          - paragraph [ref=e732]: Five of Pentacles
+          - paragraph [ref=e733]: 贫困 · 失落 · 孤立 · 困难
+      - generic [ref=e734] [cursor=pointer]:
+        - generic [ref=e735]:
+          - img "星币六 (Six of Pentacles)" [ref=e736]
+          - generic [ref=e737]: "[ 查看详情 ]"
+        - generic [ref=e739]:
+          - paragraph [ref=e740]: 星币六
+          - paragraph [ref=e741]: Six of Pentacles
+          - paragraph [ref=e742]: 慷慨 · 分享 · 慈善 · 互惠
+      - generic [ref=e743] [cursor=pointer]:
+        - generic [ref=e744]:
+          - img "星币七 (Seven of Pentacles)" [ref=e745]
+          - generic [ref=e746]: "[ 查看详情 ]"
+        - generic [ref=e748]:
+          - paragraph [ref=e749]: 星币七
+          - paragraph [ref=e750]: Seven of Pentacles
+          - paragraph [ref=e751]: 评估 · 投资 · 耐心 · 收获
+      - generic [ref=e752] [cursor=pointer]:
+        - generic [ref=e753]:
+          - img "星币八 (Eight of Pentacles)" [ref=e754]
+          - generic [ref=e755]: "[ 查看详情 ]"
+        - generic [ref=e757]:
+          - paragraph [ref=e758]: 星币八
+          - paragraph [ref=e759]: Eight of Pentacles
+          - paragraph [ref=e760]: 精进 · 专注 · 技能 · 勤奋
+      - generic [ref=e761] [cursor=pointer]:
+        - generic [ref=e762]:
+          - img "星币九 (Nine of Pentacles)" [ref=e763]
+          - generic [ref=e764]: "[ 查看详情 ]"
+        - generic [ref=e766]:
+          - paragraph [ref=e767]: 星币九
+          - paragraph [ref=e768]: Nine of Pentacles
+          - paragraph [ref=e769]: 富足 · 自律 · 独立 · 优雅
+      - generic [ref=e770] [cursor=pointer]:
+        - generic [ref=e771]:
+          - img "星币十 (Ten of Pentacles)" [ref=e772]
+          - generic [ref=e773]: "[ 查看详情 ]"
+        - generic [ref=e775]:
+          - paragraph [ref=e776]: 星币十
+          - paragraph [ref=e777]: Ten of Pentacles
+          - paragraph [ref=e778]: 传承 · 家族 · 遗产 · 长久繁荣
+      - generic [ref=e779] [cursor=pointer]:
+        - generic [ref=e780]:
+          - img "星币侍从 (Page of Pentacles)" [ref=e781]
+          - generic [ref=e782]: "[ 查看详情 ]"
+        - generic [ref=e784]:
+          - paragraph [ref=e785]: 星币侍从
+          - paragraph [ref=e786]: Page of Pentacles
+          - paragraph [ref=e787]: 勤勉 · 学习 · 实践 · 脚踏实地
+      - generic [ref=e788] [cursor=pointer]:
+        - generic [ref=e789]:
+          - img "星币骑士 (Knight of Pentacles)" [ref=e790]
+          - generic [ref=e791]: "[ 查看详情 ]"
+        - generic [ref=e793]:
+          - paragraph [ref=e794]: 星币骑士
+          - paragraph [ref=e795]: Knight of Pentacles
+          - paragraph [ref=e796]: 稳健 · 可靠 · 谨慎 · 工作狂
+      - generic [ref=e797] [cursor=pointer]:
+        - generic [ref=e798]:
+          - img "星币王后 (Queen of Pentacles)" [ref=e799]
+          - generic [ref=e800]: "[ 查看详情 ]"
+        - generic [ref=e802]:
+          - paragraph [ref=e803]: 星币王后
+          - paragraph [ref=e804]: Queen of Pentacles
+          - paragraph [ref=e805]: 养育 · 务实 · 慷慨 · 丰饶
+      - generic [ref=e806] [cursor=pointer]:
+        - generic [ref=e807]:
+          - img "星币国王 (King of Pentacles)" [ref=e808]
+          - generic [ref=e809]: "[ 查看详情 ]"
+        - generic [ref=e811]:
+          - paragraph [ref=e812]: 星币国王
+          - paragraph [ref=e813]: King of Pentacles
+          - paragraph [ref=e814]: 富足 · 稳定 · 成功 · 良善管理者

@@ -12,7 +12,7 @@
  * - 自动降级无感切换
  */
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import type { DrawnCard } from "@/types"
 import { springSmooth } from "@/lib/motionTokens"
@@ -34,6 +34,14 @@ interface ReadingStreamProps {
   apiKey?: string
   onReset?: () => void
   onComplete?: () => void
+  /** Compact mode: show only the first completed paragraph, no header/actions */
+  compact?: boolean
+  /** Whether to render the section header (default true) */
+  showHeader?: boolean
+  /** Whether to render action buttons (default true) */
+  showActions?: boolean
+  /** Called when a completed paragraph changes the active card position */
+  onActivePositionChange?: (position: 'past' | 'present' | 'future' | null) => void
 }
 
 /* =================================================== */
@@ -97,7 +105,17 @@ function extractParagraphs(buffer: string): [Paragraph[], string] {
 /*  组件                                                */
 /* =================================================== */
 
-export function ReadingStream({ cards, question, apiKey, onReset, onComplete }: ReadingStreamProps) {
+export function ReadingStream({
+  cards,
+  question,
+  apiKey,
+  onReset,
+  onComplete,
+  compact = false,
+  showHeader = true,
+  showActions = true,
+  onActivePositionChange,
+}: ReadingStreamProps) {
   const [paragraphs, setParagraphs] = useState<Paragraph[]>([])
   const [streamingTitle, setStreamingTitle] = useState("")
   const [streamingContent, setStreamingContent] = useState("")
@@ -111,11 +129,10 @@ export function ReadingStream({ cards, question, apiKey, onReset, onComplete }: 
   const hasCompletedRef = useRef(false)
 
   /* =================================================== */
-  /*  启动流式请求                                        */
+  /*  状态重置（仅在重试时调用，不在 effect 中触发）       */
   /* =================================================== */
 
-  const startReading = useCallback(async () => {
-    // 清除上次错误状态（支持重试时安全重置）
+  const resetState = useCallback(() => {
     setHasError(false)
     setErrorMessage("")
     setParagraphs([])
@@ -125,7 +142,14 @@ export function ReadingStream({ cards, question, apiKey, onReset, onComplete }: 
     bufferRef.current = ""
     hasCompletedRef.current = false
     setHasCompleted(false)
+  }, [])
 
+  /* =================================================== */
+  /*  启动流式请求（不包含同步 setState，可安全在 effect 调用）*/
+  /* =================================================== */
+
+  const startReading = useCallback(async () => {
+    controllerRef.current?.abort()
     const controller = new AbortController()
     controllerRef.current = controller
 
@@ -204,10 +228,28 @@ export function ReadingStream({ cards, question, apiKey, onReset, onComplete }: 
           if (parsed.type === "done") {
             // 将剩余的 streaming 段落转为完整段落
             if (bufferRef.current) {
-              const [completed] = extractParagraphs(bufferRef.current)
+              const [completed, remaining] = extractParagraphs(bufferRef.current)
               setParagraphs((prev) => {
                 const existing = new Set(prev.map((p) => p.title))
                 const newPars = completed.filter((p) => !existing.has(p.title))
+
+                // 将最后一个未完成段落（无后续 ## 标记）也转为完整
+                if (remaining) {
+                  const firstNewline = remaining.indexOf("\n")
+                  if (firstNewline >= 0) {
+                    const title = remaining.slice(0, firstNewline).replace(/^## /, "")
+                    const content = remaining.slice(firstNewline + 1)
+                    if (title && !existing.has(title)) {
+                      newPars.push({
+                        id: `p-${prev.length + newPars.length}`,
+                        title,
+                        content: content.trim(),
+                        isComplete: true,
+                      })
+                    }
+                  }
+                }
+
                 return [...prev, ...newPars]
               })
             }
@@ -263,20 +305,53 @@ export function ReadingStream({ cards, question, apiKey, onReset, onComplete }: 
   }, [cancelReading])
 
   /* =================================================== */
+  /*  活动位置：段落完成后通知父组件亮起对应卡牌          */
+  /* =================================================== */
+
+  const POSITION_MAP = useMemo(
+    () => ["past" as const, "present" as const, "future" as const],
+    [],
+  )
+
+  /** 已通知过父组件的段落数量，避免 React 批量导致丢失中间状态 */
+  const notifiedCountRef = useRef(0)
+
+  useEffect(() => {
+    if (!onActivePositionChange) return
+    if (paragraphs.length <= notifiedCountRef.current) return
+
+    // 通知每个新完成的段落对应的卡牌位置
+    for (let i = notifiedCountRef.current; i < paragraphs.length; i++) {
+      const pos = POSITION_MAP[i]
+      if (pos) onActivePositionChange(pos)
+    }
+    notifiedCountRef.current = paragraphs.length
+  }, [paragraphs, onActivePositionChange, POSITION_MAP])
+
+  /** 根据段落序号找到对应的 DrawnCard */
+  const getCardForParagraph = useCallback((paragraphIndex: number): DrawnCard | undefined => {
+    const position = POSITION_MAP[paragraphIndex]
+    if (!position) return undefined
+    return cards.find(c => c.position === position)
+  }, [cards, POSITION_MAP])
+
+  /* =================================================== */
   /*  渲染                                                */
   /* =================================================== */
 
   return (
     <div className="w-full max-w-lg space-y-4">
-      {/* 标题 */}
-      <motion.h2
-        className="font-heading text-lg tracking-wider text-neon-cyan"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={springSmooth}
-      >
-        ══ 赛博占卜师的解读 ══
-      </motion.h2>
+      {/* 标题（可通过 showHeader 控制） */}
+      {showHeader && (
+        <motion.h2
+          className="font-heading text-lg tracking-wider text-neon-cyan"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={springSmooth}
+        >
+          ══ 赛博占卜师的解读 ══
+        </motion.h2>
+      )}
 
       {/* 错误提示 */}
       <AnimatePresence>
@@ -290,7 +365,7 @@ export function ReadingStream({ cards, question, apiKey, onReset, onComplete }: 
             <p className="text-sm text-error">{errorMessage}</p>
             <button
               type="button"
-              onClick={startReading}
+              onClick={() => { resetState(); startReading() }}
               className="mt-2 text-xs text-neon-cyan hover:text-neon-cyan/80 transition-colors"
             >
               [ 重新连接神谕核心 ]
@@ -302,7 +377,7 @@ export function ReadingStream({ cards, question, apiKey, onReset, onComplete }: 
       {/* 已完成段落 */}
       <div className="space-y-6">
         <AnimatePresence mode="popLayout">
-          {paragraphs.map((para) => (
+          {(compact ? paragraphs.slice(0, 1) : paragraphs).map((para) => (
             <motion.div
               key={para.id}
               className="space-y-2"
@@ -313,36 +388,51 @@ export function ReadingStream({ cards, question, apiKey, onReset, onComplete }: 
               <h3 className="font-subheading text-base font-semibold tracking-wide text-neon-purple">
                 {para.title}
               </h3>
+              {/* 位置对应的卡牌名 — 不以颜色作为唯一信号 */}
+              {(() => {
+                const match = getCardForParagraph(paragraphs.indexOf(para))
+                return match ? (
+                  <span className="text-xs tracking-wide text-text-muted">
+                    {match.card.nameZh} · {match.card.nameEn}
+                  </span>
+                ) : null
+              })()}
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-primary">
                 {para.content}
               </p>
+              {/* 紧凑模式：有更多段落的提示 */}
+              {compact && paragraphs.length > 1 && (
+                <p className="text-xs text-text-muted">… 还有 {paragraphs.length - 1} 段解读</p>
+              )}
             </motion.div>
           ))}
         </AnimatePresence>
 
-        {/* 正在流式输出的当前段落 */}
-        <AnimatePresence>
-          {isStreaming && streamingTitle && (
-            <motion.div
-              className="space-y-2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.15 }}
-            >
-              <h3 className="font-subheading text-base font-semibold tracking-wide text-neon-purple">
-                {streamingTitle}
-              </h3>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-primary">
-                {streamingContent}
-                {/* 脉冲光标 */}
-                <span className="inline-block h-4 w-0.5 animate-pulse bg-neon-cyan align-text-bottom" />
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* 正在流式输出的当前段落 — 紧凑模式下隐藏 */}
+        {!compact && (
+          <AnimatePresence>
+            {isStreaming && streamingTitle && (
+              <motion.div
+                className="space-y-2"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <h3 className="font-subheading text-base font-semibold tracking-wide text-neon-purple">
+                  {streamingTitle}
+                </h3>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-primary">
+                  {streamingContent}
+                  {/* 脉冲光标 */}
+                  <span className="inline-block h-4 w-0.5 animate-pulse bg-neon-cyan align-text-bottom" />
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
 
-        {/* 加载中（尚未收到任何内容） */}
-        {isStreaming && !streamingTitle && !hasError && paragraphs.length === 0 && (
+        {/* 加载中（尚未收到任何内容）— 紧凑模式下隐藏 */}
+        {!compact && isStreaming && !streamingTitle && !hasError && paragraphs.length === 0 && (
           <div className="flex flex-col items-center gap-3 py-8">
             <div className="flex gap-1">
               <span className="h-2 w-2 animate-bounce rounded-full bg-neon-cyan [animation-delay:0ms]" />
@@ -354,48 +444,50 @@ export function ReadingStream({ cards, question, apiKey, onReset, onComplete }: 
         )}
       </div>
 
-      {/* 操作按钮区 */}
-      <div className="flex items-center justify-center gap-4 pt-4">
-        {isStreaming && (
-          <button
-            type="button"
-            onClick={cancelReading}
-            className="rounded-lg border border-card-border px-5 py-2.5 font-subheading text-sm tracking-wide text-text-secondary transition-all duration-200 hover:border-error/50 hover:text-error"
-          >
-            [ 取消解读 ]
-          </button>
-        )}
+      {/* 操作按钮区 — 可通过 showActions 控制 */}
+      {showActions && (
+        <div className="flex items-center justify-center gap-4 pt-4">
+          {isStreaming && (
+            <button
+              type="button"
+              onClick={cancelReading}
+              className="rounded-lg border border-card-border px-5 py-2.5 font-subheading text-sm tracking-wide text-text-secondary transition-all duration-200 hover:border-error/50 hover:text-error"
+            >
+              [ 取消解读 ]
+            </button>
+          )}
 
-        {!isStreaming && !hasError && (paragraphs.length > 0 || hasCompleted) && (
-          <motion.button
-            type="button"
-            onClick={onReset}
-            className="rounded-lg bg-neon-cyan px-6 py-3 font-heading text-sm font-bold tracking-wider text-deep-space"
-            initial={{ opacity: 0, y: 10, boxShadow: "0 0 10px rgba(0, 240, 255, 0.15)" }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              boxShadow: [
-                "0 0 12px rgba(0, 240, 255, 0.25)",
-                "0 0 20px rgba(0, 240, 255, 0.45)",
-                "0 0 12px rgba(0, 240, 255, 0.25)",
-              ],
-            }}
-            transition={{
-              ...springSmooth,
-              delay: 0.4,
-              boxShadow: {
-                repeat: Infinity,
-                duration: 2.5,
-                ease: "easeInOut",
-              },
-            }}
-            whileHover={{ boxShadow: "0 0 30px rgba(0, 240, 255, 0.6)" }}
-          >
-            [ 🔄 再来一次 ]
-          </motion.button>
-        )}
-      </div>
+          {!isStreaming && !hasError && (paragraphs.length > 0 || hasCompleted) && (
+            <motion.button
+              type="button"
+              onClick={onReset}
+              className="rounded-lg bg-neon-cyan px-6 py-3 font-heading text-sm font-bold tracking-wider text-deep-space"
+              initial={{ opacity: 0, y: 10, boxShadow: "0 0 10px rgba(0, 240, 255, 0.15)" }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                boxShadow: [
+                  "0 0 12px rgba(0, 240, 255, 0.25)",
+                  "0 0 20px rgba(0, 240, 255, 0.45)",
+                  "0 0 12px rgba(0, 240, 255, 0.25)",
+                ],
+              }}
+              transition={{
+                ...springSmooth,
+                delay: 0.4,
+                boxShadow: {
+                  repeat: Infinity,
+                  duration: 2.5,
+                  ease: "easeInOut",
+                },
+              }}
+              whileHover={{ boxShadow: "0 0 30px rgba(0, 240, 255, 0.6)" }}
+            >
+              再来一次
+            </motion.button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
