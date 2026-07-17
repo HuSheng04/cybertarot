@@ -517,7 +517,7 @@ export default function AboutContent() {
           transition={springGentle}
         >
           <p className="font-subheading text-sm tracking-wide text-neon-cyan">
-            🚀 本項目是面試作品集的一部分
+            本項目是面試作品集的一部分
           </p>
           <p className="mt-2 text-xs text-text-muted">
             CyberTarot 展示了全棧 AI 產品開發能力：Next.js App Router + 3D 渲染
