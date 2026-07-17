@@ -116,7 +116,7 @@ pnpm dev
 
 # 5. 运行测试
 pnpm test
-# 55 个测试用例验证核心功能
+# 90 个测试用例验证核心功能
 
 # 6. 生产构建
 pnpm build
@@ -157,6 +157,11 @@ src/
 │   ├── CardSkeleton.tsx       # 骨架屏
 │   ├── R3FErrorBoundary.tsx   # WebGL 降级边界
 │   ├── ReadingStream.tsx      # 流式解读展示
+│   ├── ReadingSheet.tsx       # 可折叠底部解读面板
+│   ├── CardDetailModal.tsx    # 卡牌详情无障碍弹窗
+│   ├── ArchitectureFlow.tsx   # 响应式系统架构图
+│   ├── icons/
+│   │   └── OracleGlyph.tsx    # 本地 SVG 图标集
 │   ├── DemoTrigger.tsx        # 面试演示触发器
 │   ├── Navbar.tsx             # 导航栏
 │   ├── HeroOpening.tsx        # 开场动画
@@ -185,10 +190,15 @@ public/assets/cards/           # 78+1 张卡牌图片
 ## 🧪 测试覆盖
 
 ```
-✓ 55 tests passed (4 test suites)
+✓ 90 tests passed (10 test suites)
 
 - cards.test.ts    → 78 张牌数量/ID/花色/字段验证
 - drawEngine.test.ts → 洗牌算法/正逆位概率/分布验证
+- Navbar.test.tsx  → 品牌标识、SVG 图标、响应式导航
+- ReadingSheet.test.tsx → 紧凑/展开状态、aria-expanded、回调传递
+- ReadingStream.test.tsx → 流式段落、位置标记、卡牌名称
+- CardDetailModal.test.tsx → 对话框打开/关闭、Escape/背板/筛选切换
+- ArchitectureFlow.test.tsx → 节点顺序、无 pre 元素
 - 组件/集成测试 → 核心流程验证
 ```
 
