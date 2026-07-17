@@ -361,7 +361,7 @@ console.log(`[12.2] Tab 导航到: ${activeLabel || 'unknown'}`);
 const couldOpen = await page12.evaluate(async () => {
   const el = document.activeElement;
   if (el && el.tagName === 'BUTTON') {
-    (el as HTMLButtonElement).click();
+    el.click();
     await new Promise(r => setTimeout(r, 300));
     return document.querySelector('[role="dialog"]') !== null;
   }
@@ -432,10 +432,310 @@ console.log(`[15.1] Demo 模式触发: ${demoContent > 0}`);
 await page15.screenshot({ path: `${SCREENSHOT_DIR}/15-demo-mode.png` });
 console.log('  截图: 15-demo-mode.png');
 
+// ========== TEST 16: ReadingSheet 展开/折叠 (Demo 模式) ==========
+console.log('\n=== TEST 16: ReadingSheet 展开/折叠 ===');
+const page16 = await context.newPage();
+await page16.goto('http://localhost:3000/?demo');
+await page16.waitForTimeout(6000);
+
+// 等待 reading 出现 — 寻找解读面板
+const hasReadingOverlay = await page16.locator('text=赛博占卜师的解读').or(page16.locator('text=过去的痕迹')).count();
+console.log(`[16.1] 解读面板存在: ${hasReadingOverlay > 0}`);
+
+// 寻找展开按钮 (expand/collapse control)
+const expandBtn = page16.locator('button[aria-label*="展开"]');
+const hasExpandBtn = await expandBtn.count();
+
+if (hasExpandBtn > 0) {
+  console.log('[16.2] 展开按钮存在: ✅');
+  const expandedBefore = await expandBtn.getAttribute('aria-expanded');
+  console.log(`[16.3] 展开前 aria-expanded: ${expandedBefore}`);
+
+  await expandBtn.click();
+  await page16.waitForTimeout(500);
+  const expandedAfter = await expandBtn.getAttribute('aria-expanded');
+  console.log(`[16.4] 展开后 aria-expanded: ${expandedAfter}`);
+
+  // 再次点击折叠
+  const collapseBtn = page16.locator('button[aria-label*="折叠"]');
+  const hasCollapseBtn = await collapseBtn.count();
+  console.log(`[16.5] 折叠按钮存在: ${hasCollapseBtn > 0}`);
+
+  if (hasCollapseBtn > 0) {
+    await collapseBtn.click();
+    await page16.waitForTimeout(300);
+    const collapsedAfter = await expandBtn.getAttribute('aria-expanded');
+    console.log(`[16.6] 折叠后 aria-expanded: ${collapsedAfter}`);
+  }
+} else {
+  // 如果没有专门的展开按钮，尝试找 toggle 控件
+  const sheetToggle = page16.locator('button[aria-expanded], [role="button"][aria-expanded]');
+  const hasToggle = await sheetToggle.count();
+  console.log(`[16.2] 通过 aria-expanded 找 toggle: ${hasToggle > 0}`);
+
+  if (hasToggle > 0) {
+    const expanded = await sheetToggle.getAttribute('aria-expanded');
+    console.log(`[16.3] ReadingSheet aria-expanded: ${expanded}`);
+    await sheetToggle.click();
+    await page16.waitForTimeout(500);
+
+    // 检查 sheet 高度变化
+    const sheetExpanded = await sheetToggle.getAttribute('aria-expanded');
+    console.log(`[16.4] 点击后 aria-expanded: ${sheetExpanded}`);
+  }
+}
+
+await page16.screenshot({ path: `${SCREENSHOT_DIR}/16-reading-sheet.png` });
+console.log('  截图: 16-reading-sheet.png');
+
+// ========== TEST 17: 768×1024 平板断点 ==========
+console.log('\n=== TEST 17: 768×1024 平板断点 ===');
+const tabletCtx = await browser.newContext({
+  viewport: { width: 768, height: 1024 },
+  deviceScaleFactor: 2,
+});
+
+// 17a: 首页
+const page17a = await tabletCtx.newPage();
+await page17a.goto('http://localhost:3000');
+await page17a.evaluate(() => localStorage.setItem('cybertarot_visited', 'true'));
+await page17a.reload();
+await page17a.waitForTimeout(1000);
+const homeOverflowTablet = await page17a.evaluate(() =>
+  document.documentElement.scrollWidth > document.documentElement.clientWidth
+);
+console.log(`[17.1] 768px 首页无水平溢出: ${!homeOverflowTablet}`);
+const navTablet = await page17a.locator('a[aria-label="CyberTarot 2077"]').count();
+console.log(`[17.2] 768px 导航可见: ${navTablet > 0}`);
+await page17a.screenshot({ path: `${SCREENSHOT_DIR}/17a-home-tablet.png` });
+console.log('  截图: 17a-home-tablet.png');
+
+// 17b: Cards 页面
+const page17b = await tabletCtx.newPage();
+await page17b.goto('http://localhost:3000/cards');
+await page17b.waitForTimeout(1500);
+const cardsOverflowTablet = await page17b.evaluate(() =>
+  document.documentElement.scrollWidth > document.documentElement.clientWidth
+);
+console.log(`[17.3] 768px Cards 无水平溢出: ${!cardsOverflowTablet}`);
+const cardsCountTablet = await page17b.locator('[aria-label*="查看详情"]').count();
+console.log(`[17.4] 768px 卡片可见: ${cardsCountTablet > 0}`);
+await page17b.screenshot({ path: `${SCREENSHOT_DIR}/17b-cards-tablet.png` });
+console.log('  截图: 17b-cards-tablet.png');
+
+// 17c: About 页面
+const page17c = await tabletCtx.newPage();
+await page17c.goto('http://localhost:3000/about');
+await page17c.waitForTimeout(1500);
+const aboutOverflowTablet = await page17c.evaluate(() =>
+  document.documentElement.scrollWidth > document.documentElement.clientWidth
+);
+console.log(`[17.5] 768px About 无水平溢出: ${!aboutOverflowTablet}`);
+const archFlow = await page17c.locator('text=系统架构').or(page17c.locator('text=Client')).count();
+console.log(`[17.6] 768px 架构图可见: ${archFlow > 0}`);
+await page17c.screenshot({ path: `${SCREENSHOT_DIR}/17c-about-tablet.png` });
+console.log('  截图: 17c-about-tablet.png');
+
+await tabletCtx.close();
+
+// ========== TEST 18: Reduced Motion 检查 ==========
+console.log('\n=== TEST 18: Reduced Motion 检查 ===');
+const reducedMotionCtx = await browser.newContext({
+  viewport: { width: 1440, height: 900 },
+  reducedMotion: 'reduce',
+});
+const page18 = await reducedMotionCtx.newPage();
+await page18.goto('http://localhost:3000');
+await page18.evaluate(() => localStorage.setItem('cybertarot_visited', 'true'));
+await page18.reload();
+await page18.waitForTimeout(500);
+
+// 检查身体是否有 motion-reduce 类（如果项目使用）
+const hasMotionReduceClass = await page18.evaluate(() => {
+  return document.documentElement.classList.contains('reduce-motion') ||
+         document.documentElement.classList.contains('motion-reduce');
+});
+console.log(`[18.1] reduced-motion 类存在: ${hasMotionReduceClass}`);
+
+// 检查 prefers-reduced-motion media query 是否生效
+const motionPref = await page18.evaluate(() => {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+});
+console.log(`[18.2] prefers-reduced-motion:reduce 匹配: ${motionPref}`);
+
+// 截屏确认没有不必要的动画闪烁
+await page18.screenshot({ path: `${SCREENSHOT_DIR}/18-reduced-motion.png` });
+console.log('  截图: 18-reduced-motion.png');
+
+// 检查 CSS 中是否包含 reduced-motion 规则
+const cssReducedMotion = await page18.evaluate(() => {
+  for (const sheet of Array.from(document.styleSheets)) {
+    try {
+      for (const rule of Array.from(sheet.cssRules || [])) {
+        if (rule.cssText && rule.cssText.includes('prefers-reduced-motion')) return true;
+      }
+    } catch(e) {}
+  }
+  return false;
+});
+console.log(`[18.3] CSS 包含 prefers-reduced-motion 规则: ${cssReducedMotion}`);
+
+// 导航到 cards 页检查
+await page18.goto('http://localhost:3000/cards');
+await page18.waitForTimeout(500);
+const cardsReducedMotion = await page18.locator('[aria-label*="查看详情"]').count();
+console.log(`[18.4] reduced-motion 下 Cards 正常: ${cardsReducedMotion > 0}`);
+await page18.screenshot({ path: `${SCREENSHOT_DIR}/18-reduced-motion-cards.png` });
+console.log('  截图: 18-reduced-motion-cards.png');
+
+// 导航到 about 页检查
+await page18.goto('http://localhost:3000/about');
+await page18.waitForTimeout(500);
+const aboutReducedMotion = await page18.locator('h1').count();
+console.log(`[18.5] reduced-motion 下 About 正常: ${aboutReducedMotion > 0}`);
+await page18.screenshot({ path: `${SCREENSHOT_DIR}/18-reduced-motion-about.png` });
+console.log('  截图: 18-reduced-motion-about.png');
+
+await reducedMotionCtx.close();
+
+// ========== TEST 19: WebGL 失败降级检查 ==========
+console.log('\n=== TEST 19: WebGL 失败降级 ===');
+const noWebGLCtx = await browser.newContext({
+  viewport: { width: 1440, height: 900 },
+});
+const page19 = await noWebGLCtx.newPage();
+
+// 拦截 WebGL context 创建 — 模拟 WebGL 不可用
+await page19.addInitScript(() => {
+  const origGetContext = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function(type, ...args) {
+    if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') {
+      return null;
+    }
+    return origGetContext.call(this, type, ...args);
+  };
+});
+
+await page19.goto('http://localhost:3000');
+await page19.evaluate(() => localStorage.setItem('cybertarot_visited', 'true'));
+await page19.reload();
+await page19.waitForTimeout(1000);
+
+// 验证页面仍然正常渲染（WebGL 降级为 CSS 2D）
+const noWebGLTitle = await page19.locator('text=赛博占卜师').or(page19.locator('text=接入 Braindance')).count();
+console.log(`[19.1] WebGL 失败时页面仍然可交互: ${noWebGLTitle > 0}`);
+
+// Cards 页面也应工作
+await page19.goto('http://localhost:3000/cards');
+await page19.waitForTimeout(1500);
+const noWebGLCards = await page19.locator('[aria-label*="查看详情"]').count();
+console.log(`[19.2] WebGL 失败时 Cards 正常: ${noWebGLCards > 0}`);
+
+// 检查 R3F ErrorBoundary 降级 — 确认没有 3D Canvas 崩溃页面
+const hasCanvasFallback = await page19.locator('text=2D').or(page19.locator('text=降级')).count();
+console.log(`[19.3] WebGL 降级指示: ${hasCanvasFallback > 0}`);
+
+await page19.screenshot({ path: `${SCREENSHOT_DIR}/19-no-webgl-fallback.png` });
+console.log('  截图: 19-no-webgl-fallback.png');
+await noWebGLCtx.close();
+
+// ========== TEST 20: 图片加载失败降级 ==========
+console.log('\n=== TEST 20: 图片加载失败降级 ===');
+const imgFailCtx = await browser.newContext({
+  viewport: { width: 1440, height: 900 },
+});
+const page20 = await imgFailCtx.newPage();
+
+// 拦截所有 .webp 图片请求，返回 404
+await page20.route('**/*.webp', route => route.abort('Failed'));
+await page20.route('**/*.png', route => route.abort('Failed'));
+await page20.route('**/*.jpg', route => route.abort('Failed'));
+
+await page20.goto('http://localhost:3000/cards');
+await page20.waitForTimeout(1500);
+const noImgCards = await page20.locator('[aria-label*="查看详情"]').count();
+console.log(`[20.1] 图片失败时 Cards 卡片可交互: ${noImgCards > 0}`);
+
+// 检查是否有 fallback 内容或 alt 文本
+const imgElements = await page20.evaluate(() => {
+  const imgs = Array.from(document.querySelectorAll('img'));
+  return imgs.filter(img => !img.complete || img.naturalWidth === 0).length;
+});
+console.log(`[20.2] 图片失败数量: ${imgElements}`);
+
+// 模态框也应工作（无图片时显示文字内容）
+const firstCard20 = page20.locator('[aria-label*="查看详情"]').first();
+const clickable = await firstCard20.count();
+if (clickable > 0) {
+  await firstCard20.click();
+  await page20.waitForTimeout(500);
+  const dialogNoImg = await page20.locator('[role="dialog"]').count();
+  console.log(`[20.3] 图片失败时模态框仍可打开: ${dialogNoImg > 0}`);
+  await page20.keyboard.press('Escape');
+  await page20.waitForTimeout(300);
+}
+
+await page20.screenshot({ path: `${SCREENSHOT_DIR}/20-img-fail-fallback.png` });
+console.log('  截图: 20-img-fail-fallback.png');
+await imgFailCtx.close();
+
+// ========== TEST 21: ReadingSheet 键盘可访问性 ==========
+console.log('\n=== TEST 21: ReadingSheet 键盘可访问性 ===');
+const page21 = await context.newPage();
+await page21.goto('http://localhost:3000/?demo');
+await page21.waitForTimeout(6000);
+
+// Tab 到 sheet 控件
+for (let i = 0; i < 30; i++) {
+  await page21.keyboard.press('Tab');
+  await page21.waitForTimeout(50);
+  const activeEl = await page21.evaluate(() => {
+    const el = document.activeElement;
+    return el?.getAttribute('aria-label') || el?.textContent?.trim() || el?.tagName || null;
+  });
+  if (activeEl && (activeEl.includes('展开') || activeEl.includes('折叠') || activeEl.includes('解读'))) {
+    console.log(`[21.1] Tab 导航到 sheet 控件: ${activeEl}`);
+    break;
+  }
+  if (i === 29) {
+    console.log('[21.1] Tab 未导航到 sheet 控件 (可能已在 focus 路径上)');
+  }
+}
+
+// 尝试用 Enter 触发 sheet 操作
+const focusedSheet = await page21.evaluate(() => {
+  const el = document.activeElement;
+  return el?.getAttribute('aria-label') || el?.textContent?.trim() || null;
+});
+console.log(`[21.2] 当前焦点元素: ${focusedSheet || 'none'}`);
+
+// 如果有 reset 按钮，检查键盘可达
+const resetBtn21 = page21.locator('button:has-text("再来一次"), button[aria-label*="重置"]');
+const hasResetBtn21 = await resetBtn21.count();
+console.log(`[21.3] 存在重置按钮: ${hasResetBtn21 > 0}`);
+
+// 检查 control 的 44px 最小尺寸
+const minSizeCheck = await page21.evaluate(() => {
+  const buttons = Array.from(document.querySelectorAll('button, a[href], [role="button"]'));
+  let below44 = 0;
+  let total = 0;
+  for (const btn of buttons) {
+    const rect = btn.getBoundingClientRect();
+    total++;
+    if (rect.width < 44 && rect.height < 44) below44++;
+  }
+  return { total, below44 };
+});
+console.log(`[21.4] 控件尺寸检查: ${minSizeCheck.below44}/${minSizeCheck.total} 个小于 44px`);
+
+await page21.screenshot({ path: `${SCREENSHOT_DIR}/21-keyboard-sheet.png` });
+console.log('  截图: 21-keyboard-sheet.png');
+
 // ========== CLEANUP ==========
 await browser.close();
 await mobileCtx.close();
 
 console.log('\n=== ✅ 视觉检查完成 ===');
 console.log(`截图保存在: ${SCREENSHOT_DIR}/`);
+console.log(`覆盖测试: 开场动画 | 导航品牌 | 卡片筛选/模态框 | ReadingSheet | 响应式(375/768/1440) | 键盘可访问性 | 设计系统合规 | Demo模式 | Reduced Motion | WebGL降级 | 图片降级 | 44px控件`);
 })();
