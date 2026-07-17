@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react"
 import Navbar from "@/components/Navbar"
+import ArchitectureFlow from "@/components/ArchitectureFlow"
 import {
   springSmooth,
   springGentle,
@@ -87,67 +88,67 @@ const challengeItem = {
 const techStack = [
   {
     name: "Next.js 16 (App Router)",
-    detail: "React Server Components + 流式 SSR，自動代碼分割",
+    detail: "React Server Components + 流式 SSR，自动代码分割",
     color: "text-neon-cyan",
   },
   {
     name: "React Three Fiber",
-    detail: "3D 翻牌桌與粒子背景，WebGL 加速渲染",
+    detail: "3D 翻牌桌与粒子背景，WebGL 加速渲染",
     color: "text-neon-cyan",
   },
   {
     name: "Motion (Framer Motion)",
-    detail: "頁面過渡、段落浮現、輸入框抖動動畫",
+    detail: "页面过渡、段落浮现、输入框抖动动画",
     color: "text-neon-cyan",
   },
   {
     name: "DeepSeek API",
-    detail: "流式 AI 占卜解讀，10s 超時 + 自動重試 + 模板降級",
+    detail: "流式 AI 占卜解读，10s 超时 + 自动重试 + 模板降级",
     color: "text-neon-purple",
   },
   {
     name: "Tailwind CSS v4",
-    detail: "暗黑賽博配色系統，utility-first 樣式",
+    detail: "暗黑赛博配色系统，utility-first 样式",
     color: "text-neon-cyan",
   },
   {
     name: "TypeScript",
-    detail: "全量類型覆蓋，Zod schema 驗證（擴展）",
+    detail: "全量类型覆盖，Zod schema 验证（扩展）",
     color: "text-neon-cyan",
   },
   {
     name: "Sharp",
-    detail: "78 張卡面 PNG → WebP 批量壓縮，平均 213KB/張",
+    detail: "78 张卡面 PNG → WebP 批量压缩，平均 213KB/张",
     color: "text-neon-purple",
   },
   {
     name: "pnpm",
-    detail: "依賴管理，快照隔離，節省磁碟空間",
+    detail: "依赖管理，快照隔离，节省磁盘空间",
     color: "text-neon-cyan",
   },
 ]
 
 const challenges = [
   {
-    title: "3D 翻牌動畫時序控制",
+    title: "3D 翻牌动画时序控制",
     problem:
-      "三張牌需要按「過去→現在→未來」順序翻轉，每張間隔 500ms，各自動畫時長 800ms。直接使用 React 狀態管理會導致動畫不同步。",
+      "三张牌需要按「过去→现在→未来」顺序翻转，每张间隔 500ms，各自动画时长 800ms。直接使用 React 状态管理会导致动画不同步。",
     solution:
-      "使用 useFrame + 手動 lerp 控制 rotation.y，配合 delay 參數實現精確時序。翻牌完成後自動觸發 phase 切換（useEffect timeout 2.5s）。",
+      "使用 useFrame + 手动 lerp 控制 rotation.y，配合 delay 参数实现精确时序。翻牌完成后自动触发 phase 切换（useEffect timeout 2.5s）。",
   },
   {
-    title: "流式 SSE 段落切分 + 動畫",
+    title: "流式 SSE 段落切分 + 动画",
     problem:
-      "DeepSeek 返回的 SSE 流需要按 ## 標題即時分割段落，且標題需先於正文 150ms 顯示。服務端返回的 chunk 可能在任何位置截斷。",
+      "DeepSeek 返回的 SSE 流需要按 ## 标题即时分割段落，且标题需先于正文 150ms 显示。服务端返回的 chunk 可能在任何位置截断。",
     solution:
-      "客戶端維護 text buffer，每收到 chunk 就嘗試分割完整段落。維護 streamingParagraph 和 completed 兩個列表，標題與正文分開渲染。",
+      "客户端维护 text buffer，每收到 chunk 就尝试分割完整段落。维护 streamingParagraph 和 completed 两个列表，标题与正文分开渲染。",
   },
   {
-    title: "Vercel Hobby Plan 10s 超時 + API 降級",
+    title: "Vercel Hobby Plan 10s 超时 + API 降级",
     problem:
-      "Vercel Serverless 函數最多運行 10s，DeepSeek API 可能超時或不可用。面試場景要求零故障。",
+      "Vercel Serverless 函数最多运行 10s，DeepSeek API 可能超时或不可用。面试场景要求零故障。",
     solution:
-      "Prompt 壓縮至 ~600 字，限制 max_tokens=1000。前端緩存 5 套模板解讀，3 次重試失敗後無感切換，用戶零感知。",
+      "Prompt 压缩至 ~600 字，限制 max_tokens=1000。前端缓存 5 套模板解读，3 次重试失败后无感切换，用户零感知。",
   },
 ]
 
@@ -191,13 +192,13 @@ export default function AboutContent() {
                 "0 0 7px #00f0ff, 0 0 10px rgba(0, 240, 255, 0.5), 0 0 21px rgba(0, 240, 255, 0.3)",
             }}
           >
-            ══ 關於 CyberTarot ══
+            ══ 关于 CyberTarot ══
           </motion.h1>
           <motion.p
             variants={heroItem}
             className="mt-4 text-sm leading-relaxed text-text-muted"
           >
-            一個將古老塔羅智慧融入賽博龐克世界的 AI 占卜體驗。
+            一个将古老塔罗智慧融入赛博朋克世界的 AI 占卜体验。
           </motion.p>
         </motion.section>
 
@@ -216,17 +217,17 @@ export default function AboutContent() {
           </h2>
           <div className="space-y-3 text-sm leading-relaxed text-text-secondary">
             <p>
-              2077 年，舊世界的物理紙張已成傳說。賽博先知們從數據廢墟中發掘出古老的手稿預言，
-              將它們保存在金屬畫框中——每一張都是一個「遺物卡牌」，承載著被遺忘的智慧碎片。
+              2077 年，旧世界的物理纸张已成传说。赛博先知们从数据废墟中发掘出古老的手稿预言，
+              将它们保存在金属画框中——每一张都是一个「遗物卡牌」，承载着被遗忘的智慧碎片。
             </p>
             <p>
-              用戶通過 Braindance 神經接口接入賽博先知的意識網絡，AI
-              神諭核心會為其抽取三張遺物卡牌，
-              解讀過去留下的痕跡、此刻流動的能量、以及未來編織的可能性。
+              用户通过 Braindance 神经接口接入赛博先知的意识网络，AI
+              神谕核心会为其抽取三张遗物卡牌，
+              解读过去留下的痕迹、此刻流动的能量、以及未来编织的可能性。
             </p>
             <p>
-              每一次占卜都是一次穿越數據洪流的精神旅程——在 0 與 1
-              的縫隙中，尋找屬於你的命運信號。
+              每一次占卜都是一次穿越数据洪流的精神旅程——在 0 与 1
+              的缝隙中，寻找属于你的命运信号。
             </p>
           </div>
 
@@ -238,7 +239,7 @@ export default function AboutContent() {
             viewport={{ once: true, amount: 0.3 }}
             transition={springSmooth}
           >
-            「在 0 與 1 的縫隙中，尋找屬於你的命運信號。」
+            「在 0 与 1 的缝隙中，寻找属于你的命运信号。」
           </motion.blockquote>
         </motion.section>
 
@@ -255,9 +256,9 @@ export default function AboutContent() {
           viewport={{ once: true, amount: 0.3 }}
         >
           {[
-            { number: "78", label: "遺物卡牌" },
-            { number: "3", label: "命運之牌" },
-            { number: "2", label: "AI 神諭核心" },
+            { number: "78", label: "遗物卡牌" },
+            { number: "3", label: "命运之牌" },
+            { number: "2", label: "AI 神谕核心" },
           ].map((item) => (
             <motion.div
               key={item.number}
@@ -339,7 +340,7 @@ export default function AboutContent() {
             viewport={{ once: true }}
             transition={springSmooth}
           >
-            ▎系統架構
+            ▎系统架构
           </motion.h2>
           <motion.div
             className="overflow-x-auto rounded-xl border bg-deep-space/80 p-4"
@@ -353,59 +354,7 @@ export default function AboutContent() {
             viewport={{ once: true, amount: 0.2 }}
             transition={springGentle}
           >
-            <pre className="font-mono text-xs leading-loose text-text-secondary">
-{`┌─────────────────────────────────────────────────────┐
-│                    🖥  Client                         │
-│  ┌──────────┐  ┌──────────┐  ┌───────────────────┐  │
-│  │Braindance│──→│Question  │──→│TarotTable3D(R3F) │  │
-│  │Portal    │  │Input     │  │+ ParticleBg       │  │
-│  └──────────┘  └──────────┘  └────────┬──────────┘  │
-│                                       │              │
-│  ┌────────────────────────────────────▼───────────┐  │
-│  │          ReadingStream (SSE 流式)              │  │
-│  └──────────────────────┬─────────────────────────┘  │
-└─────────────────────────┼───────────────────────────┘
-                          │ POST /api/reading
-┌─────────────────────────▼───────────────────────────┐
-│                   🖥  Server                         │
-│  ┌───────────────────────────────────────────────┐  │
-│  │  Route Handler /api/reading                   │  │
-│  │  ├─ AbortController (客戶端斷開中止)          │  │
-│  │  ├─ 自動重試 (最多 2 次, 間隔 1s)            │  │
-│  │  └─ 全部失敗 → 模板降級 (5 套)               │  │
-│  └───────────────────┬───────────────────────────┘  │
-│                      │ DeepSeek API                  │
-│  ┌───────────────────▼───────────────────────────┐  │
-│  │  DeepSeek Chat (stream=true)                  │  │
-│  │  系統 Prompt ~600 字 + 用戶 Prompt           │  │
-│  └───────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────┘`}
-            </pre>
-          </motion.div>
-
-          {/* 架构图图例: 高亮关键节点 */}
-          <motion.div
-            className="flex flex-wrap items-center justify-center gap-4 text-[10px] text-text-muted"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-          >
-            <span className="inline-flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-neon-cyan/20" />
-              Client 端
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-neon-cyan/20" />
-              Server 端
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-neon-purple/20" />
-              DeepSeek API
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-neon-cyan/60">
-              ──→ 數據流向
-            </span>
+            <ArchitectureFlow />
           </motion.div>
         </section>
 
@@ -420,7 +369,7 @@ export default function AboutContent() {
           transition={springSmooth}
         >
           <h2 className="font-subheading text-xl tracking-wide text-neon-purple">
-            ▎78 張塔羅牌數據
+            ▎78 张塔罗牌数据
           </h2>
           <div className="space-y-3 text-sm leading-relaxed text-text-secondary">
             <p>
@@ -437,18 +386,18 @@ export default function AboutContent() {
                 <code className="text-neon-cyan">major_00</code>、{" "}
                 <code className="text-neon-cyan">wands_05</code>）
               </li>
-              <li>中英文名稱</li>
-              <li>花色歸屬（大阿卡納 / 權杖 / 聖杯 / 寶劍 / 星幣）</li>
-              <li>3 個關鍵詞</li>
-              <li>正位 + 逆位釋義（各 ~50 字）</li>
+              <li>中英文名称</li>
+              <li>花色归属（大阿卡纳 / 权杖 / 圣杯 / 宝剑 / 星币）</li>
+              <li>3 个关键词</li>
+              <li>正位 + 逆位释义（各 ~50 字）</li>
               <li>
-                自動注入 <code className="text-neon-cyan">imagePath</code>（
+                自动注入 <code className="text-neon-cyan">imagePath</code>（
                 /assets/cards/{`{id}`}.webp）
               </li>
             </ul>
             <p className="text-xs text-text-muted">
               Fisher-Yates 洗牌算法 + mulberry32
-              種子隨機數生成器確保同一問題結果可復現。
+              种子随机数生成器确保同一问题结果可复现。
               正位概率 ~70%，逆位 ~30%。
             </p>
           </div>
@@ -467,7 +416,7 @@ export default function AboutContent() {
             viewport={{ once: true }}
             transition={springSmooth}
           >
-            ▎開發中解決的技術挑戰
+            ▎开发中解决的技术挑战
           </motion.h2>
           <motion.div
             className="space-y-4"
@@ -485,7 +434,7 @@ export default function AboutContent() {
               >
                 {/* 故障风格标签 */}
                 <span className="absolute -top-2 left-3 rounded bg-error/10 px-2 font-mono text-[10px] tracking-wider text-error">
-                  ⚠ 故障代碼 0x{index + 1}A
+                  故障代码 0x{index + 1}A
                 </span>
 
                 <p className="font-subheading text-sm font-semibold tracking-wide text-neon-cyan">
@@ -493,11 +442,11 @@ export default function AboutContent() {
                 </p>
                 <div className="mt-2 space-y-1 text-xs text-text-secondary">
                   <p>
-                    <span className="font-semibold text-warning">▸ 問題：</span>
+                    <span className="font-semibold text-warning">问题：</span>
                     {challenge.problem}
                   </p>
                   <p>
-                    <span className="font-semibold text-success">▸ 解法：</span>
+                    <span className="font-semibold text-success">解法：</span>
                     {challenge.solution}
                   </p>
                 </div>
@@ -517,11 +466,11 @@ export default function AboutContent() {
           transition={springGentle}
         >
           <p className="font-subheading text-sm tracking-wide text-neon-cyan">
-            本項目是面試作品集的一部分
+            本项目是面试作品集的一部分
           </p>
           <p className="mt-2 text-xs text-text-muted">
-            CyberTarot 展示了全棧 AI 產品開發能力：Next.js App Router + 3D 渲染
-            + 流式 AI 集成 + 賽博 UI 設計 + 錯誤邊界降級策略。
+            CyberTarot 展示了全栈 AI 产品开发能力：Next.js App Router + 3D 渲染
+            + 流式 AI 集成 + 赛博 UI 设计 + 错误边界降级策略。
           </p>
           <div className="mt-4 flex items-center justify-center gap-6 text-xs text-text-muted">
             <span className="transition-colors duration-200 hover:text-neon-cyan">
