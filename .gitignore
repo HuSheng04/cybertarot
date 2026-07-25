@@ -53,4 +53,21 @@ docs/superpowers/
 *.tsbuildinfo
 next-env.d.ts
 
+# build backups & stray logs
+/.next.bak*/
+/_*.log
+
+# AI 工具/IDE 代理目录（本地产物，含个人环境信息）
+/.agents/
+/.claude/
+/.codebuddy/
+/.hermes/
+/.lingma/
+/.workbuddy/
+/.workbuddy-ai/
+
+# 第三方技能包（体积大且非项目源码）
+/skills/
+skills-lock.json
+
 .vercel
