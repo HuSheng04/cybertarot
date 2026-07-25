@@ -5,7 +5,7 @@ created: 2026-07-14
 updated: 2026-07-14
 status: final
 project: CyberTarot 赛博占卜师
-author: 王顺成
+author: w3118597378-max
 decisions:
   - card_compression: Sharp 脚本自动转 WebP 512×700px
   - api_runtime: Node.js Serverless Functions（统一决策，删除所有 Edge 引用）

@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { motion } from "motion/react"
 import OracleGlyph from "@/components/icons/OracleGlyph"
 
@@ -19,12 +20,27 @@ type Props = {
 export default function Navbar({ isFullscreen = false }: Props) {
   const pathname = usePathname()
 
+  /* 美化方案 §5.4 · 滚动感知: >40px 背景加深一档 + 底部 cyan 细线淡入 */
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 border-b border-card-border transition-all duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-500 ${
+        scrolled
+          ? "border-neon-cyan/20 bg-deep-space/95 backdrop-blur-md"
+          : "border-card-border"
+      } ${
         isFullscreen
           ? "bg-deep-space/30 backdrop-blur-sm hover:bg-deep-space/80"
-          : "bg-deep-space/80 backdrop-blur-md"
+          : scrolled
+            ? ""
+            : "bg-deep-space/80 backdrop-blur-md"
       }`}
     >
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
@@ -32,7 +48,7 @@ export default function Navbar({ isFullscreen = false }: Props) {
         <Link
           href="/"
           aria-label="CyberTarot 2077"
-          className="flex items-center gap-2 font-heading text-lg tracking-wider text-neon-cyan transition-colors hover:text-neon-cyan/80"
+          className="flex items-center gap-2 py-3 font-heading text-lg tracking-wider text-neon-cyan transition-colors hover:text-neon-cyan/80"
         >
           <OracleGlyph name="brand" size={22} className="text-neon-cyan" />
           <span className="hidden sm:inline">CyberTarot</span>
@@ -51,7 +67,7 @@ export default function Navbar({ isFullscreen = false }: Props) {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`relative px-3 py-2 text-sm font-medium transition-colors ${
+                className={`relative px-3 py-3 text-sm font-medium transition-colors ${
                   isActive
                     ? "text-neon-cyan"
                     : "text-text-secondary hover:text-text-primary"

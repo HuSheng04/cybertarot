@@ -120,9 +120,9 @@ export function CardDetailModal({ card, onClose }: Props) {
           onKeyDown={handleKeyDown}
           onClick={handleBackdropClick}
         >
-          {/* ---- 对话框面板 ---- */}
+          {/* ---- 对话框面板 · 美化方案 P1-E: 左图右文双栏(移动端堆叠) ---- */}
           <motion.div
-            className="relative mx-auto max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-xl border border-card-border bg-card-surface shadow-card"
+            className="relative mx-auto max-h-[85dvh] w-full max-w-2xl overflow-y-auto rounded-xl border border-card-border bg-card-surface shadow-card"
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -139,67 +139,72 @@ export function CardDetailModal({ card, onClose }: Props) {
               <OracleGlyph name="close" size={18} />
             </button>
 
-            {/* ---- 卡牌图片 ---- */}
-            <div className="relative aspect-[3/4] w-full overflow-hidden">
-              <Image
-                src={card.imagePath}
-                alt={`${card.nameZh} (${card.nameEn})`}
-                fill
-                sizes="(max-width: 512px) 100vw, 512px"
-                className="object-cover"
-                priority
-              />
-              {/* 底部渐变遮罩 — 让图片和下方文字区自然过渡 */}
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-card-surface to-transparent" />
-            </div>
-
-            {/* ---- 卡牌信息 ---- */}
-            <div className="space-y-4 px-5 pb-6 pt-4">
-              {/* 牌名 */}
-              <div>
-                <h2 className="font-heading text-xl tracking-wider text-neon-cyan">
-                  {card.nameZh}
-                </h2>
-                <p className="mt-0.5 font-subheading text-sm tracking-wide text-text-secondary">
-                  {card.nameEn}
-                </p>
-                <p className="mt-0.5 font-mono text-xs text-text-muted">
-                  {suitLabel} · #{cardNumber}
-                </p>
+            <div className="flex flex-col sm:flex-row">
+              {/* ---- 左栏: 卡牌图片 ---- */}
+              <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden sm:w-2/5">
+                <Image
+                  src={card.imagePath}
+                  alt={`${card.nameZh} (${card.nameEn})`}
+                  fill
+                  sizes="(max-width: 640px) 100vw, 320px"
+                  className="object-cover"
+                  priority
+                />
+                {/* 底部渐变遮罩 — 移动端堆叠时自然过渡 */}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-card-surface to-transparent sm:hidden" />
               </div>
 
-              {/* 关键词标签 */}
-              <div className="flex flex-wrap gap-1.5">
-                {card.keywords.map((kw) => (
-                  <span
-                    key={kw}
-                    className="rounded-md border border-card-border bg-card-hover/60 px-2.5 py-1 font-subheading text-xs tracking-wide text-text-secondary"
-                  >
-                    {kw}
-                  </span>
-                ))}
-              </div>
+              {/* ---- 右栏: 卡牌信息 ---- */}
+              <div className="space-y-4 px-5 pb-6 pt-4 sm:w-3/5 sm:pt-6">
+                {/* 牌名 + Cinzel 编号 */}
+                <div>
+                  <h2 className="font-serif-cn text-xl font-semibold tracking-wider text-neon-cyan">
+                    {card.nameZh}
+                  </h2>
+                  <p className="mt-0.5 font-cinzel text-sm uppercase tracking-[0.2em] text-text-secondary">
+                    {card.nameEn}
+                  </p>
+                  <p className="mt-0.5 font-cinzel text-xs tracking-widest text-text-muted">
+                    {suitLabel} ·{" "}
+                    <span className={card.suit === Suit.Major ? "text-moonlight-gold" : undefined}>
+                      #{cardNumber}
+                    </span>
+                  </p>
+                </div>
 
-              {/* 正位释义 */}
-              <div>
-                <h3 className="mb-1 flex items-center gap-1.5 font-subheading text-sm font-semibold tracking-wide text-success">
-                  <span aria-hidden="true">▲</span>
-                  <span>正位</span>
-                </h3>
-                <p className="text-sm leading-relaxed text-text-primary">
-                  {card.meaningUp}
-                </p>
-              </div>
+                {/* 关键词胶囊云 */}
+                <div className="flex flex-wrap gap-1.5">
+                  {card.keywords.map((kw) => (
+                    <span
+                      key={kw}
+                      className="rounded-full border border-neon-cyan/25 bg-neon-cyan/5 px-2.5 py-1 font-subheading text-xs tracking-wide text-text-secondary"
+                    >
+                      {kw}
+                    </span>
+                  ))}
+                </div>
 
-              {/* 逆位释义 */}
-              <div>
-                <h3 className="mb-1 flex items-center gap-1.5 font-subheading text-sm font-semibold tracking-wide text-error">
-                  <span aria-hidden="true">▼</span>
-                  <span>逆位</span>
-                </h3>
-                <p className="text-sm leading-relaxed text-text-primary">
-                  {card.meaningDown}
-                </p>
+                {/* 正位释义 — cyan 左边线 */}
+                <div className="border-l-2 border-neon-cyan/60 pl-3">
+                  <h3 className="mb-1 flex items-center gap-1.5 font-subheading text-sm font-semibold tracking-wide text-success">
+                    <span aria-hidden="true">▲</span>
+                    <span>正位</span>
+                  </h3>
+                  <p className="text-sm leading-relaxed text-text-primary">
+                    {card.meaningUp}
+                  </p>
+                </div>
+
+                {/* 逆位释义 — red 左边线 */}
+                <div className="border-l-2 border-error/60 pl-3">
+                  <h3 className="mb-1 flex items-center gap-1.5 font-subheading text-sm font-semibold tracking-wide text-error">
+                    <span aria-hidden="true">▼</span>
+                    <span>逆位</span>
+                  </h3>
+                  <p className="text-sm leading-relaxed text-text-primary">
+                    {card.meaningDown}
+                  </p>
+                </div>
               </div>
             </div>
           </motion.div>

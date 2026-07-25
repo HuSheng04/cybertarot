@@ -1,7 +1,7 @@
 "use client"
 
-import { memo, Suspense, useState, useEffect, useMemo } from "react"
-import { Canvas } from "@react-three/fiber"
+import { memo, Suspense, useState, useEffect, useMemo, useRef } from "react"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { OrbitControls } from "@react-three/drei"
 import * as THREE from "three"
 
@@ -12,6 +12,32 @@ import type { DrawnCard } from "@/types"
 /* ===== 环境光照配置 ===== */
 const AMBIENT_INTENSITY = 0.5
 const DIRECTIONAL_INTENSITY = 0.8
+
+/* ===== 响应式相机距离（移动端审计 P2） =====
+ * 三牌阵 x=±2.5，窄屏水平 FOV 不足会裁掉两侧牌，
+ * 按视口宽度拉远相机: <640px → 8.4 / <1024px → 7 / 桌面 → 6
+ */
+function getCameraZ(width: number): number {
+  if (width < 640) return 8.4
+  if (width < 1024) return 7
+  return 6
+}
+
+/** Canvas 内部相机距离同步（OrbitControls 共存, 仅初始化/断点变化时设置） */
+function CameraRig({ z }: { z: number }) {
+  const camera = useThree((s) => s.camera)
+  const appliedZ = useRef(0)
+  /* R3F 惯例: three 对象的命令式变更放在 useFrame 中执行 */
+  /* eslint-disable react-hooks/immutability -- three.js 相机对象必须命令式修改, 与 React 不可变模型无关 */
+  useFrame(() => {
+    if (appliedZ.current === z) return
+    camera.position.z = z
+    camera.updateProjectionMatrix()
+    appliedZ.current = z
+  })
+  /* eslint-enable react-hooks/immutability */
+  return null
+}
 
 type Props = {
   /** 已抽取的卡牌（三张） */
@@ -151,6 +177,15 @@ const MemoizedScene = memo(TarotTable3DScene)
  * dynamic(() => import(...), { ssr: false }) 导入。
  */
 export function TarotTable3D({ cards, isShuffling, shouldFlip, lowPerformance, activePosition }: Props) {
+  /* 响应式相机距离（窗口缩放/旋转时同步） */
+  const [camZ, setCamZ] = useState(6)
+  useEffect(() => {
+    const update = () => setCamZ(getCameraZ(window.innerWidth))
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [])
+
   return (
     <Canvas
       camera={{ position: [0, 0, 6], fov: 45, near: 0.1, far: 20 }}
@@ -170,6 +205,7 @@ export function TarotTable3D({ cards, isShuffling, shouldFlip, lowPerformance, a
         left: 0,
       }}
     >
+      <CameraRig z={camZ} />
       <MemoizedScene
         cards={cards}
         isShuffling={isShuffling}

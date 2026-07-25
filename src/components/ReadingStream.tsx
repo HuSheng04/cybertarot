@@ -16,6 +16,34 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import type { DrawnCard } from "@/types"
 import { springSmooth } from "@/lib/motionTokens"
+import OracleGlyph from "@/components/icons/OracleGlyph"
+import { PullQuote, splitBoldSegments } from "@/components/PullQuote"
+
+/* =================================================== */
+/*  正逆位徽章 — 颜色+形状+文字 双编码（可访问性）        */
+/* =================================================== */
+
+function OrientationBadge({ reversed }: { reversed: boolean }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span
+        aria-hidden
+        className={
+          "inline-block h-2.5 w-2.5 rounded-full " +
+          (reversed ? "badge-ring-half" : "badge-ring-full")
+        }
+      />
+      <span
+        className={
+          "text-xs tracking-wider " +
+          (reversed ? "text-neon-purple" : "text-neon-cyan")
+        }
+      >
+        {reversed ? "逆位" : "正位"}
+      </span>
+    </span>
+  )
+}
 
 /* =================================================== */
 /*  类型                                                */
@@ -377,35 +405,54 @@ export function ReadingStream({
       {/* 已完成段落 */}
       <div className="space-y-6">
         <AnimatePresence mode="popLayout">
-          {(compact ? paragraphs.slice(0, 1) : paragraphs).map((para) => (
+          {(compact ? paragraphs.slice(0, 1) : paragraphs).map((para) => {
+            const paraIndex = paragraphs.indexOf(para)
+            const paraPos = POSITION_MAP[paraIndex]
+            const match = getCardForParagraph(paraIndex)
+            return (
             <motion.div
               key={para.id}
-              className="space-y-2"
+              id={paraPos ? `reading-para-${paraPos}` : undefined}
+              className="space-y-2 scroll-mt-24"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={springSmooth}
             >
-              <h3 className="font-subheading text-base font-semibold tracking-wide text-neon-purple">
-                {para.title}
+              {/* 段落标题新结构: [位置glyph] 标题 · 牌名 + Cinzel 英文 + 正逆位徽章 */}
+              <h3 className="flex items-center gap-2 font-serif-cn text-base font-semibold tracking-wide text-neon-purple">
+                {paraPos && (
+                  <OracleGlyph name={paraPos} size={14} className="shrink-0 text-neon-purple/80" />
+                )}
+                <span>{para.title}</span>
+                {match && (
+                  <span className="font-normal text-text-secondary">· {match.card.nameZh}</span>
+                )}
               </h3>
-              {/* 位置对应的卡牌名 — 不以颜色作为唯一信号 */}
-              {(() => {
-                const match = getCardForParagraph(paragraphs.indexOf(para))
-                return match ? (
-                  <span className="text-xs tracking-wide text-text-muted">
-                    {match.card.nameZh} · {match.card.nameEn}
+              {match && (
+                <div className="flex items-center gap-3">
+                  <span className="font-cinzel text-xs uppercase tracking-[0.2em] text-text-muted">
+                    {match.card.nameEn}
                   </span>
-                ) : null
-              })()}
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-primary">
-                {para.content}
-              </p>
+                  <OrientationBadge reversed={match.isReversed} />
+                </div>
+              )}
+              {/* 正文: **加粗诗意句** 自动提取为 PullQuote */}
+              <div className="reading-prose text-sm text-text-primary">
+                {splitBoldSegments(para.content).map((seg, i) =>
+                  seg.quote ? (
+                    <PullQuote key={i} text={seg.text} />
+                  ) : (
+                    <p key={i} className="whitespace-pre-wrap">{seg.text}</p>
+                  ),
+                )}
+              </div>
               {/* 紧凑模式：有更多段落的提示 */}
               {compact && paragraphs.length > 1 && (
                 <p className="text-xs text-text-muted">… 还有 {paragraphs.length - 1} 段解读</p>
               )}
             </motion.div>
-          ))}
+            )
+          })}
         </AnimatePresence>
 
         {/* 正在流式输出的当前段落 — 紧凑模式下隐藏 */}
@@ -418,10 +465,17 @@ export function ReadingStream({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.15 }}
               >
-                <h3 className="font-subheading text-base font-semibold tracking-wide text-neon-purple">
-                  {streamingTitle}
+                <h3 className="flex items-center gap-2 font-serif-cn text-base font-semibold tracking-wide text-neon-purple">
+                  {POSITION_MAP[paragraphs.length] && (
+                    <OracleGlyph
+                      name={POSITION_MAP[paragraphs.length]}
+                      size={14}
+                      className="shrink-0 text-neon-purple/80"
+                    />
+                  )}
+                  <span>{streamingTitle}</span>
                 </h3>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-primary">
+                <p className="reading-prose whitespace-pre-wrap text-sm text-text-primary">
                   {streamingContent}
                   {/* 脉冲光标 */}
                   <span className="inline-block h-4 w-0.5 animate-pulse bg-neon-cyan align-text-bottom" />
@@ -461,7 +515,7 @@ export function ReadingStream({
             <motion.button
               type="button"
               onClick={onReset}
-              className="rounded-lg bg-neon-cyan px-6 py-3 font-heading text-sm font-bold tracking-wider text-deep-space"
+              className="flow-sweep rounded-lg bg-neon-cyan px-6 py-3 font-heading text-sm font-bold tracking-wider text-deep-space"
               initial={{ opacity: 0, y: 10, boxShadow: "0 0 10px rgba(0, 240, 255, 0.15)" }}
               animate={{
                 opacity: 1,
@@ -477,7 +531,7 @@ export function ReadingStream({
                 delay: 0.4,
                 boxShadow: {
                   repeat: Infinity,
-                  duration: 2.5,
+                  duration: 3,
                   ease: "easeInOut",
                 },
               }}

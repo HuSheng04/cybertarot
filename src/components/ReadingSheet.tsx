@@ -4,7 +4,10 @@ import { useState, useCallback, useEffect } from "react"
 import { motion } from "motion/react"
 import OracleGlyph from "@/components/icons/OracleGlyph"
 import { ReadingStream } from "./ReadingStream"
+import { CardMiniNav } from "@/components/CardMini"
 import type { DrawnCard } from "@/types"
+
+type Position = "past" | "present" | "future"
 
 /* =================================================== */
 /*  Hook: detects prefers-reduced-motion                */
@@ -58,10 +61,45 @@ export function ReadingSheet({ cards, question, apiKey, onReset, onComplete, onA
   const [readState, setReadState] = useState<"streaming" | "completed">("streaming")
   const prefersReducedMotion = useReducedMotion()
 
+  /* ---- CardMini 当前高亮位置（镜像通知流，供迷你牌光环使用） ---- */
+  const [activeMini, setActiveMini] = useState<Position | null>(null)
+
+  const handleActivePosition = useCallback(
+    (pos: Position | null) => {
+      setActiveMini(pos)
+      onActivePositionChange?.(pos)
+    },
+    [onActivePositionChange],
+  )
+
+  /* ---- CardMini 点击: 滚动定位段落 + 联动 3D 高亮 ---- */
+  const handleMiniSelect = useCallback(
+    (pos: Position) => {
+      handleActivePosition(pos)
+      // 紧凑模式只展示首段，先展开再定位
+      setIsExpanded(true)
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`reading-para-${pos}`)
+          ?.scrollIntoView({
+            behavior: prefersReducedMotion ? "auto" : "smooth",
+            block: "center",
+          })
+      })
+    },
+    [handleActivePosition, prefersReducedMotion],
+  )
+
+  /* ---- 完成时刻金光脉冲（1800ms 一次, D1 月光金） ---- */
+  const [showGoldFlash, setShowGoldFlash] = useState(false)
+
   /* ---- callbacks ---- */
   const handleComplete = useCallback(() => {
     setReadState("completed")
+    setShowGoldFlash(true)
+    const timer = setTimeout(() => setShowGoldFlash(false), 1800)
     onComplete?.()
+    return () => clearTimeout(timer)
   }, [onComplete])
 
   const handleToggle = useCallback(() => {
@@ -71,6 +109,7 @@ export function ReadingSheet({ cards, question, apiKey, onReset, onComplete, onA
   const handleReset = useCallback(() => {
     setIsExpanded(false)
     setReadState("streaming")
+    setActiveMini(null)
     onReset?.()
   }, [onReset])
 
@@ -89,6 +128,14 @@ export function ReadingSheet({ cards, question, apiKey, onReset, onComplete, onA
       exit={{ y: "100%" }}
       transition={sheetSpring}
     >
+      {/* ---- 完成时刻金光脉冲（1800ms 一次, D1 月光金） ---- */}
+      {showGoldFlash && (
+        <div
+          aria-hidden
+          className="gold-flash pointer-events-none absolute inset-x-0 bottom-0 h-[60dvh]"
+        />
+      )}
+
       {/* ---- Gradient background + scrollable container ---- */}
       <div
         className={
@@ -126,20 +173,44 @@ export function ReadingSheet({ cards, question, apiKey, onReset, onComplete, onA
           </div>
         </div>
 
-        {/* ---- Content area — animated height ---- */}
-        <motion.div layout transition={expandSpring} className="mx-auto max-w-lg px-4 pb-8">
-          <ReadingStream
-            cards={cards}
-            question={question}
-            apiKey={apiKey}
-            onReset={handleReset}
-            onComplete={handleComplete}
-            compact={!isExpanded}
-            showHeader={false}
-            showActions={isExpanded}
-            onActivePositionChange={onActivePositionChange}
-          />
-        </motion.div>
+        {/* ---- CardMini 迷你牌导航: 缩略图+位置名, 点击定位段落 ---- */}
+        <CardMiniNav
+          cards={cards}
+          activePosition={activeMini}
+          onSelect={handleMiniSelect}
+        />
+
+        {/* ---- Content area — animated height ----
+             移动端审计 P2: 紧凑态限高 28dvh + 底部渐隐遮罩,
+             避免长段落把 3D 牌完全挤出视野(展开态保持 75dvh 滚动) */}
+        <div className="relative">
+          <motion.div
+            layout
+            transition={expandSpring}
+            className={
+              "mx-auto max-w-lg px-4 pb-8"
+              + (isExpanded ? "" : " max-h-[28dvh] overflow-hidden")
+            }
+          >
+            <ReadingStream
+              cards={cards}
+              question={question}
+              apiKey={apiKey}
+              onReset={handleReset}
+              onComplete={handleComplete}
+              compact={!isExpanded}
+              showHeader={false}
+              showActions={isExpanded}
+              onActivePositionChange={handleActivePosition}
+            />
+          </motion.div>
+          {!isExpanded && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-deep-space/90 to-transparent"
+            />
+          )}
+        </div>
       </div>
     </motion.div>
   )

@@ -35,7 +35,8 @@ const HEX_FRAGMENTS = [
 
 function EegRing() {
   return (
-    <div className="relative mx-auto mb-6 h-24 w-24">
+    <div className="eeg-breathe relative mx-auto mb-6 h-24 w-24">
+      {/* 美化方案 P1-D: EEG 环 4s 呼吸缩放(scale 1↔1.04) */}
       {/* 环形轨道 — conic-gradient 渐变色 */}
       <div
         className="absolute inset-0 animate-[eeg-rotate_4s_linear_infinite] rounded-full"
@@ -533,7 +534,7 @@ export function BraindancePortal() {
                 }}
                 onKeyDown={handleKeyDown}
                 placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                className="w-full bg-transparent font-mono text-sm text-text-primary placeholder-text-muted/50 outline-none"
+                className="w-full bg-transparent font-mono text-base text-text-primary placeholder-text-muted/50 outline-none sm:text-sm"
                 autoFocus
                 disabled={isVerifying}
               />
@@ -603,6 +604,11 @@ export function BraindancePortal() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 美化方案 P1-D · 面板底部世界观微文案 */}
+      <p className="mt-6 font-mono text-xs tracking-[0.2em] text-text-muted opacity-30 select-none">
+        NEURAL PROTOCOL v2.7.7 · ENCRYPTED
+      </p>
     </motion.section>
   )
 }

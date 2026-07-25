@@ -13,9 +13,17 @@ jest.mock("motion/react", () => {
     <button {...props}>{children as React.ReactNode}</button>
   )
 
+  const mockMotionValue = () => ({
+    set: () => {},
+    get: () => 0,
+    on: () => () => {},
+  })
+
   return {
     motion: { div: MotionDiv, button: MotionButton },
     AnimatePresence: ({ children }: Record<string, unknown>) => <>{children}</>,
+    useMotionValue: mockMotionValue,
+    useSpring: mockMotionValue,
   }
 })
 

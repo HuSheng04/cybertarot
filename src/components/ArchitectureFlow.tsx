@@ -2,6 +2,24 @@
 
 /* ───── Data ───── */
 
+import { motion } from "motion/react"
+
+/* 美化方案 P1-F · 滚动驱动逐节点点亮(whileInView stagger) */
+const flowStagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.3, delayChildren: 0.1 } },
+}
+
+const flowNode = {
+  hidden: { opacity: 0.15, y: 12, filter: "brightness(0.6)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "brightness(1)",
+    transition: { duration: 0.6, ease: "easeOut" as const },
+  },
+}
+
 interface FlowZone {
   title: string
   items: string[]
@@ -175,23 +193,33 @@ function ComponentTreeNote() {
 
 export default function ArchitectureFlow() {
   return (
-    <div className="space-y-4" data-testid="architecture-flow">
+    <motion.div
+      className="space-y-4"
+      data-testid="architecture-flow"
+      variants={flowStagger}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.3 }}
+    >
       {/* Data flow: Client → Server → DeepSeek */}
       <div className="flex flex-col items-center md:flex-row md:items-stretch">
         {FLOW_ZONES.map((zone, i) => (
-          <div
+          <motion.div
             key={zone.title}
+            variants={flowNode}
             className="flex w-full flex-col items-center md:flex-1"
           >
             <ZoneCard zone={zone} />
 
             {i < FLOW_ZONES.length - 1 && <FlowArrow index={i} />}
-          </div>
+          </motion.div>
         ))}
       </div>
 
       {/* Compact component tree */}
-      <ComponentTreeNote />
-    </div>
+      <motion.div variants={flowNode}>
+        <ComponentTreeNote />
+      </motion.div>
+    </motion.div>
   )
 }

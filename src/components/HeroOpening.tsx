@@ -121,11 +121,12 @@ export function HeroOpening({ isFirstVisit, onComplete }: HeroOpeningProps) {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
             >
-              {/* 主标题 — 永远稳定显示 */}
+              {/* 主标题 — 永远稳定显示（小屏 clamp 收缩防横向溢出） */}
               <h1
-                className={`relative font-heading text-5xl tracking-[0.15em] text-neon-cyan sm:text-7xl md:text-8xl ${
+                className={`relative font-heading tracking-[0.15em] text-neon-cyan ${
                   glitchActive ? "" : "text-glow-cyan"
                 }`}
+                style={{ fontSize: "clamp(30px, 10vw, 96px)" }}
               >
                 CYBERTAROT
               </h1>
@@ -133,9 +134,10 @@ export function HeroOpening({ isFirstVisit, onComplete }: HeroOpeningProps) {
               {/* Glitch 偏移层 1 — cyan */}
               <span
                 aria-hidden
-                className={`pointer-events-none absolute left-0 top-0 font-heading text-5xl tracking-[0.15em] text-neon-cyan/80 sm:text-7xl md:text-8xl ${
+                className={`pointer-events-none absolute left-0 top-0 font-heading tracking-[0.15em] text-neon-cyan/80 ${
                   glitchActive ? "animate-glitch-slice-1" : "hidden"
                 }`}
+                style={{ fontSize: "clamp(30px, 10vw, 96px)" }}
               >
                 CYBERTAROT
               </span>
@@ -143,10 +145,10 @@ export function HeroOpening({ isFirstVisit, onComplete }: HeroOpeningProps) {
               {/* Glitch 偏移层 2 — magenta */}
               <span
                 aria-hidden
-                className={`pointer-events-none absolute left-0 top-0 font-heading text-5xl tracking-[0.15em] text-glitch sm:text-7xl md:text-8xl ${
+                className={`pointer-events-none absolute left-0 top-0 font-heading tracking-[0.15em] text-glitch ${
                   glitchActive ? "animate-glitch-slice-2" : "hidden"
                 }`}
-                style={{ color: "#ff00ff" }}
+                style={{ color: "#ff00ff", fontSize: "clamp(30px, 10vw, 96px)" }}
               >
                 CYBERTAROT
               </span>
@@ -158,7 +160,7 @@ export function HeroOpening({ isFirstVisit, onComplete }: HeroOpeningProps) {
             {phase === "subtitle" || phase === "brackets" || phase === "exiting" ? (
               <motion.p
                 key="subtitle"
-                className="mt-6 font-subheading text-xl tracking-wide text-text-secondary sm:text-2xl"
+                className="mt-6 font-serif-cn text-xl tracking-[0.3em] text-text-secondary sm:text-2xl"
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}

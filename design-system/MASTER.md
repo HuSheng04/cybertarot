@@ -54,6 +54,19 @@
 --color-glitch:        #ff00ff;   /* Glitch 特效色 */
 ```
 
+### 2.2b 第三仪式色（2026-07-25 美化方案 D1，已落地）
+
+```css
+--color-moonlight-gold: #e3c27e;  /* 月光金 — 神秘学仪式色，全站用量 ≤5% */
+```
+
+| 允许场景 | 禁止场景 |
+|----------|----------|
+| 大阿卡纳罗马数字金标（Cinzel） | 按钮、链接 |
+| 解读完成时刻金光脉冲（gold-flash） | 正文、常态边框 |
+| PullQuote 两侧饰线 | 任何信息承载（仅装饰，opacity ≤0.6） |
+| 神圣几何线条（SacredGeometry） | — |
+
 ### 2.3 色板使用规则
 
 | 元素 | 颜色 | 规则 |
@@ -91,13 +104,25 @@
 
 ## 3. 字体系统
 
-### 3.1 字体栈（已实现，保持）
+### 3.1 字体栈（2026-07-25 美化方案 P0-A 中文革命，已落地）
 
 | 角色 | 字体 | 权重 | 用途 |
 |------|------|------|------|
-| **标题** | Orbitron (Google Fonts) | 700-900 | H1-H3、大标题、Logo |
-| **副标题** | Rajdhani (Google Fonts) | 300-700 | 副标题、导航、标签、牌名 |
-| **正文** | Inter (Google Fonts) | 400-600 | 正文、解读内容、描述文本 |
+| **中文标题** | Noto Serif SC (next/font 自托管切片) | 600/700 | Hero 主标题、解读段落标题、关于页/牌库页标题 — `font-serif-cn` |
+| **拉丁神秘学标题** | Cinzel (next/font) | 600 | 大阿卡纳罗马数字、牌名英文、引文、Modal 编号 — `font-cinzel` |
+| **科技标题** | Orbitron (next/font) | 700-900 | 拉丁眉题、数字、倒计时 — `font-heading` |
+| **副标题/标签** | Rajdhani + Noto Sans SC(系统栈) | 300-700 | 导航、Tab、徽章、计数 — `font-subheading` |
+| **正文** | Inter + Noto Sans SC(系统栈) | 400-600 | 正文、解读内容 — `font-body` |
+
+> 正文中文按 §7 保底方案退回系统栈：CSS 栈保留 "Noto Sans SC" 名称（已安装的系统原生启用），不走网络切片，节省 ~200 个字体切片下载。
+> CSS 令牌一律 `var(--font-*)` 优先、字面量回退（next/font 生成哈希族名）。
+
+### 3.1b 排版规范（P0-A 新增）
+
+- Hero 混排：上置 `CYBER TAROT 2077`（Orbitron xs, tracking 0.5em, cyan/70）→ 下置「赛博占卜师」（Noto Serif SC 700, `clamp(44px, 8vw, 84px)`, tracking 0.12em）
+- 解读正文 `reading-prose`：line-height 1.9、letter-spacing 0.02em、max-width 65ch（"书感"）
+- PullQuote：衬线居中 + 两侧月光金饰线（1.75rem 渐变线, opacity 0.6）
+- 首字下沉 `drop-cap`：`:first-letter` 3em 衬线 cyan 700 float left
 
 ### 3.2 字号层级
 
@@ -248,6 +273,24 @@ z-60:   加载层 (全屏加载)
 - Framer Motion 下划线动效
 - 当前页高亮 neon-cyan
 - height: 56px (h-14)
+- **滚动感知（2026-07-25 §5.4）**：滚动 >40px 背景加深至 `bg-deep-space/95` + 底部 `border-neon-cyan/20` 细线淡入
+
+### 5.5 美化新增组件（2026-07-25）
+
+| 组件 | 文件 | 职责 |
+|------|------|------|
+| SacredGeometry | components/SacredGeometry.tsx | 神圣几何 SVG（hexagram 六芒星圆阵 / flower 生命之花），月光金 0.75px，opacity ≤0.1，120s 缓转 |
+| CardMini(CardMiniNav) | components/CardMini.tsx | 解读区迷你牌导航：缩略图+位置名，点击定位段落+3D 联动，当前段落 `mini-card-active` 光环 |
+| PullQuote | components/PullQuote.tsx | 引文卡 + `splitBoldSegments()` 从 LLM 加粗句自动提取 |
+| CountUp | components/CountUp.tsx | 滚动计数（useInView + useSpring），关于页 78/3/2 |
+| RuneDivider | components/RuneDivider.tsx | SVG 符文分隔线（菱形刻痕 glyph），替代 ✦ 字符版 |
+| ShuffleRitual | components/ShuffleRitual.tsx | 洗牌仪式：堆叠→扇形→飞位→溶解，reduced-motion 跳过 |
+| BodyMode | components/BodyMode.tsx | 为 body 挂载阶段背景模式类（subpage-mode 等） |
+| OrientationBadge | ReadingStream 内部 | 正位=cyan 满环+文字 / 逆位=purple 半环+文字（双编码） |
+
+**ReadingSheet 版式（P0-C）**：顶部 CardMiniNav → 段落标题 `[glyph] 标题 · 牌名` + Cinzel 英文 + 正逆位徽章 → `reading-prose` 正文（加粗句自动 PullQuote）→ 完成 gold-flash 1800ms。
+**CardDetailModal 版式（P1-E）**：左图右文双栏（max-w-2xl，移动端堆叠），Cinzel 编号（大阿卡纳金色），关键词胶囊云，正位 cyan 左边线 / 逆位 red 左边线。
+**正逆位双编码**：颜色 + 形状（满环/半环）+ 文字，不只依赖颜色（可访问性）。
 
 ---
 
@@ -265,6 +308,40 @@ z-60:   加载层 (全屏加载)
 | 段落间隔 | 200ms | — |
 | 模态框 | 250ms | scale + fade |
 | 退出动画 | 150ms（进入的 50%） | ease-in |
+
+### 6.1b 仪式动效（2026-07-25 美化方案 §4.5，已落地）
+
+> 原则：**慢即是神秘** — 环境动效 ≥1200ms，交互反馈 ≤300ms。
+
+| 动效 | 参数 | 场景 | 实现 |
+|------|------|------|------|
+| EEG 呼吸 | scale 1↔1.04, 4s ease-in-out infinite | braindance | `eeg-breathe` utility |
+| 神圣几何缓转 | rotate 360°, 120s linear | Hero / 牌库页头 | `sacred-spin` utility |
+| 星尘漂移 | 60s linear infinite alternate | 内页背景 L2 | `body.subpage-mode::before` |
+| 页面切换 | opacity 0→1, 400ms | 全站路由 | `app/template.tsx` |
+| 完成金光 | gold 光晕 0→0.6→0, 1800ms 一次 | 解读完成 | `gold-flash` utility |
+| 「再来一次」呼吸 | boxShadow 脉冲 3s infinite | done 阶段 | ReadingStream motion |
+| hover 流光 | gradient sweep 300ms | 主按钮/卡牌 | `flow-sweep` utility |
+| 冥想引导 | 2s 渐显渐隐一次 | input 阶段 | `meditation-hint-once` |
+| 洗牌仪式 | 堆叠→扇形 800ms→飞位 600ms(stagger 200ms)→溶解 650ms | shuffling | ShuffleRitual 组件 |
+
+### 6.1c 背景三层纵深（美化方案 P0-B，已落地）
+
+```
+L3 近景 · 质感层   html::before = SVG feTurbulence 噪点(烘焙 opacity 0.03) + 四角暗角(移动端仅噪点)
+L2 中景 · 动态层   首页: ParticleBg 粒子(R3F)  内页: body.subpage-mode::before 星尘慢漂
+L1 远景 · 氛围层   deep-space 底色 + bg-nebula.webp(1920×1080, ≤200KB) + 径向渐变
+```
+
+| body 类 | L1 状态 | 阶段 |
+|---------|---------|------|
+| `intro-mode` | 纯黑 | 开场动画 |
+| （默认） | bg-neural-dark 纹理 | braindance |
+| `meditation-mode` | 星云 ~30% | input 提问 |
+| `fullscreen-mode` | 纯深空 | shuffling/reading/done |
+| `subpage-mode` | 星云 ~25% + 星尘 | /cards /about（BodyMode 组件挂载） |
+
+扫描线：全局 opacity 0.1（移动端 0.08）。
 
 ### 6.2 动画类型
 
@@ -355,22 +432,19 @@ braindance → input → shuffling → drawing → reading → done → reset
 4. 解读流式展现，段落逐段浮现
 5. 始终保留 "再来一次" 出口
 
-### 7.2 关于页 `/about` — 技术博客
+### 7.2 关于页 `/about` — 个人作品介绍（2026-07-25 改版）
 
-**布局**：
-- 阅读宽度 max-w-3xl，居中
-- 卡片化的 section 容器
-- Mermaid 架构图 + 技术栈网格
-- 暗黑主题 + 代码块风格
-
+**定位**：兴趣驱动开发的作品介绍，第一人称、有亲和力；**非**面试/简历展示。
 **内容区块**：
-1. 项目概念故事（Hero）
-2. 技术栈 + 决策理由（卡片网格）
-3. 系统架构图（Mermaid）
-4. 78 张牌生成流程说明
-5. 开发中解决的 2-3 个技术挑战
-6. 与 CopyAI 的项目组合展示
-7. GitHub + 在线演示链接
+1. Hero（一句话定位）
+2. 缘起 · 创作动机（drop-cap + PullQuote）
+3. 小数字 78/3/2（CountUp）
+4. 最沉迷的部分（4 张兴趣卡）
+5. 它是怎么运转的（Cinzel 金罗马数字 4 步 + 一句技术注脚）
+6. 页尾 GitHub / 站内 demo 双卡
+
+**禁区**：面试话术、技术选型论证、架构图、挑战复盘、项目组合展示。
+详细规则见 `design-system/pages/about.md`。
 
 ### 7.3 牌库页 `/cards` — 78 张牌百科
 

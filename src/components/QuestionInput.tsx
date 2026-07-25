@@ -110,14 +110,23 @@ export function QuestionInput() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      {/* 标题 */}
+      {/* 美化方案 P1-D · 冥想引导: 2s 渐显渐隐一次(不循环打扰) */}
+      <p
+        aria-hidden
+        className="meditation-hint-once mb-2 font-serif-cn text-sm tracking-[0.3em] text-text-secondary"
+        style={{ animationDelay: "0.6s" }}
+      >
+        深呼吸，默念你的问题
+      </p>
+
+      {/* 标题 — 衬线化, 淘汰 ASCII 拼贴装饰 */}
       <motion.h2
-        className="font-heading text-xl tracking-wider text-neon-cyan"
+        className="font-serif-cn text-xl font-semibold tracking-[0.2em] text-neon-cyan"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.4 }}
       >
-        ══ 冥想终端 ══
+        冥想终端
       </motion.h2>
       <motion.p
         className="mt-2 text-sm text-text-secondary"
@@ -165,7 +174,7 @@ export function QuestionInput() {
             placeholder="输入你的问题，赛博先知将为你解读…"
             rows={3}
             disabled={isSubmitting}
-            className="relative z-10 w-full resize-none bg-transparent text-sm leading-relaxed text-text-primary placeholder-text-muted/50 outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="relative z-10 w-full resize-none bg-transparent text-base leading-relaxed text-text-primary placeholder-text-muted/50 outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
           />
 
           {/* 底部状态栏 */}
@@ -173,16 +182,31 @@ export function QuestionInput() {
             <span className="font-mono text-[10px] text-text-muted">
               {isSubmitting ? "连接 Braindance…" : "Enter 提交 · Shift+Enter 换行"}
             </span>
-            <span
-              className={`font-mono text-xs tabular-nums ${
-                text.length > MAX_CHARS * 0.9
-                  ? "text-warning"
-                  : text.length > MAX_CHARS * 0.7
-                    ? "text-text-secondary"
-                    : "text-text-muted"
-              }`}
-            >
-              {text.length}/{MAX_CHARS}
+            {/* 美化方案 P1-D · 字数计数升级: 弧形进度环 + Rajdhani 数字 */}
+            <span className="flex items-center gap-1.5" aria-label={`已输入 ${text.length} 字，上限 ${MAX_CHARS} 字`}>
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden className="-rotate-90">
+                <circle cx="8" cy="8" r="6" fill="none" stroke="var(--color-card-border)" strokeWidth="1.5" />
+                <circle
+                  cx="8" cy="8" r="6" fill="none"
+                  stroke={text.length > MAX_CHARS * 0.9 ? "var(--color-warning)" : "var(--color-neon-cyan)"}
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 6}
+                  strokeDashoffset={2 * Math.PI * 6 * (1 - text.length / MAX_CHARS)}
+                  style={{ transition: "stroke-dashoffset 200ms ease-out" }}
+                />
+              </svg>
+              <span
+                className={`font-subheading text-xs tabular-nums ${
+                  text.length > MAX_CHARS * 0.9
+                    ? "text-warning"
+                    : text.length > MAX_CHARS * 0.7
+                      ? "text-text-secondary"
+                      : "text-text-muted"
+                }`}
+              >
+                {text.length}
+              </span>
             </span>
           </div>
         </div>
@@ -208,7 +232,7 @@ export function QuestionInput() {
         type="button"
         onClick={handleDeepDive}
         disabled={isSubmitting}
-        className={`mt-6 rounded-lg px-10 py-3 font-heading text-sm font-bold tracking-wider text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
+        className={`flow-sweep mt-6 rounded-lg px-10 py-3 font-heading text-sm font-bold tracking-wider text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
           pulseClick ? "animate-[pulse-click_0.4s_ease-out_forwards]" : ""
         }`}
         style={{

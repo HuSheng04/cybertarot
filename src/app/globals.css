@@ -15,10 +15,17 @@
   --color-text-secondary: #8888aa;
   --color-text-muted: #5a5a7a;
 
-  /* 字体家族 */
-  --font-heading: "Orbitron", sans-serif;
-  --font-subheading: "Rajdhani", sans-serif;
-  --font-body: "Inter", sans-serif;
+  /* 美化方案 D1 · 月光金第三仪式色（用量 ≤5%，仅仪式场景） */
+  --color-moonlight-gold: #e3c27e;
+
+  /* 字体家族 — 优先 next/font 自托管变量, 字面量作系统回退 */
+  --font-heading: var(--font-orbitron), "Orbitron", sans-serif;
+  --font-subheading: var(--font-rajdhani), "Rajdhani", "Noto Sans SC", sans-serif;
+  --font-body: var(--font-inter), "Inter", "Noto Sans SC", sans-serif;
+  /* 美化方案 P0-A · 中文衬线标题（神秘×书感） */
+  --font-serif-cn: var(--font-noto-serif-sc), "Noto Serif SC", "Songti SC", serif;
+  /* 美化方案 P0-A · 拉丁神秘学标题（罗马数字/牌名英文/引文） */
+  --font-cinzel: var(--font-cinzel-next), "Cinzel", serif;
 
   /* 霓虹发光阴影 */
   --shadow-neon-cyan: 0 0 10px #00f0ff, 0 0 20px rgba(0, 240, 255, 0.3);
@@ -85,9 +92,13 @@
 }
 
 /* ===== 全局基础样式 ===== */
+/* 美化方案 P0-B · 背景三层纵深系统
+   L1 远景: 星云图(webp, 深蓝紫低对比) / braindance 阶段保留 neural 纹理
+   L2 中景: 粒子(R3F) / 内页星尘(CSS 慢漂)
+   L3 近景: html::before 噪点 + 四角暗角 */
 body {
   background:
-    radial-gradient(ellipse at center, rgba(10, 10, 26, 0.6) 0%, rgba(10, 10, 26, 0.95) 70%) fixed,
+    radial-gradient(ellipse at center, rgba(10, 10, 26, 0.55) 0%, rgba(10, 10, 26, 0.94) 72%) fixed,
     url("/assets/bg-neural-dark.webp") center center / cover no-repeat fixed;
   background-color: var(--color-deep-space);
   color: var(--color-text-primary);
@@ -96,11 +107,68 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* 冥想模式（QuestionInput 阶段）— 背景更暗，更安静 */
+/* 冥想模式（QuestionInput 阶段）— 星云 30% 可见，安静内省 */
 body.meditation-mode {
   background:
-    radial-gradient(ellipse at center, rgba(10, 10, 26, 0.8) 0%, rgba(10, 10, 26, 0.98) 70%) fixed,
-    url("/assets/bg-neural-dark.webp") center center / cover no-repeat fixed;
+    radial-gradient(ellipse at center, rgba(10, 10, 26, 0.7) 0%, rgba(10, 10, 26, 0.97) 72%) fixed,
+    url("/assets/bg-nebula.webp") center center / cover no-repeat fixed;
+  background-color: var(--color-deep-space);
+}
+
+/* 内页模式（/cards /about）— 星云 25% 可见 + L2 星尘慢漂 */
+body.subpage-mode {
+  background:
+    radial-gradient(ellipse at center, rgba(10, 10, 26, 0.75) 0%, rgba(10, 10, 26, 0.96) 72%) fixed,
+    url("/assets/bg-nebula.webp") center center / cover no-repeat fixed;
+  background-color: var(--color-deep-space);
+}
+
+/* 内页 L2 星尘漂移（60s 线性，纯 CSS 驱动）
+   注意: 层必须 inset:0 — 负 inset 会让 fixed 元素撑出横向滚动(375px 实测 +43px) */
+body.subpage-mode::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(0, 240, 255, 0.15), transparent),
+    radial-gradient(1px 1px at 30% 60%, rgba(180, 77, 255, 0.1), transparent),
+    radial-gradient(1.5px 1.5px at 55% 10%, rgba(0, 240, 255, 0.2), transparent),
+    radial-gradient(1px 1px at 70% 70%, rgba(180, 77, 255, 0.12), transparent),
+    radial-gradient(1px 1px at 90% 40%, rgba(0, 240, 255, 0.1), transparent),
+    radial-gradient(1.5px 1.5px at 15% 85%, rgba(0, 240, 255, 0.08), transparent),
+    radial-gradient(1px 1px at 45% 45%, rgba(180, 77, 255, 0.06), transparent);
+  animation: star-drift 60s linear infinite alternate;
+}
+
+@keyframes star-drift {
+  from {
+    background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+  }
+  to {
+    background-position: -20px 14px, -20px 14px, -20px 14px, -20px 14px, -20px 14px, -20px 14px, -20px 14px;
+  }
+}
+
+/* L3 近景质感层 — 噪点(SVG feTurbulence, 透明度已烘焙≈0.03) + 四角暗角 */
+html::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='240' height='240' filter='url(%23n)' opacity='0.03'/></svg>"),
+    radial-gradient(ellipse at center, transparent 52%, rgba(3, 3, 10, 0.5) 100%);
+}
+
+/* 低端移动设备: 去掉 L3 暗角, 仅保留轻噪点, 降低 GPU 负载 */
+@media (max-width: 640px) {
+  html::before {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='240' height='240' filter='url(%23n)' opacity='0.025'/></svg>");
+  }
 }
 
 /* 全屏翻牌模式（shuffling / reading 阶段）— 背景几乎纯黑，让 3D 粒子做主视觉 */
@@ -141,7 +209,7 @@ body::after {
     var(--color-scanline, rgba(0, 240, 255, 0.03)) 4px
   );
   animation: scan-line 8s linear infinite;
-  opacity: 0.2;
+  opacity: 0.1; /* 美化方案 P0-B: 0.2 → 0.1，退到"可感知不可阅读" */
 }
 
 /* ===== Phase 3: Braindance EEG Keyframes ===== */
@@ -341,6 +409,14 @@ body.intro-mode {
   background: var(--color-deep-space);
 }
 
+/* ===== 美化方案 P0-A · 解读正文“书感”排版 ===== */
+@utility reading-prose {
+  font-family: var(--font-body);
+  line-height: 1.9;
+  letter-spacing: 0.02em;
+  max-width: 65ch;
+}
+
 /* ===== 全息分隔线 ===== */
 @utility holographic-divider {
   height: 1px;
@@ -375,7 +451,7 @@ html {
 /* 低端移动设备降低扫描线 GPU 负载 */
 @media (max-width: 640px) {
   body::after {
-    opacity: 0.15;
+    opacity: 0.08; /* 美化方案 P0-B: 0.15 → 0.08 */
   }
 }
 
@@ -453,5 +529,170 @@ html {
 
   body::after {
     display: none; /* 关闭扫描线装饰 */
+  }
+}
+
+/* ============================================================ */
+/*  美化方案 P0-C · 解读区仪式感                                   */
+/* ============================================================ */
+
+/* 解读正文 — "书感" 排版: 行高 1.9 / 字距 0.02em / 限宽 65ch */
+@utility reading-prose {
+  font-family: var(--font-body);
+  line-height: 1.9;
+  letter-spacing: 0.02em;
+  max-width: 65ch;
+}
+
+/* PullQuote 引文卡 — 衬线居中 + 两侧金线 */
+@utility pull-quote {
+  position: relative;
+  font-family: var(--font-serif-cn);
+  text-align: center;
+  color: var(--color-text-primary);
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 1.75rem;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-moonlight-gold)
+    );
+    opacity: 0.6;
+  }
+
+  &::before {
+    left: 0;
+  }
+
+  &::after {
+    right: 0;
+    transform: scaleX(-1);
+  }
+}
+
+/* 正逆位徽章 — 满环(正位/cyan) 与 半环(逆位/purple) 双编码 */
+@utility badge-ring-full {
+  border: 1.5px solid var(--color-neon-cyan);
+  box-shadow: 0 0 6px rgba(0, 240, 255, 0.35);
+}
+@utility badge-ring-half {
+  border: 1.5px solid transparent;
+  border-top-color: var(--color-neon-purple);
+  border-right-color: var(--color-neon-purple);
+  box-shadow: 0 0 6px rgba(180, 77, 255, 0.3);
+}
+
+/* 完成时刻金光脉冲 — 1800ms 一次 */
+@keyframes gold-pulse {
+  0% { opacity: 0; }
+  35% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+@utility gold-flash {
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(227, 194, 126, 0.55) 0%,
+    rgba(227, 194, 126, 0.18) 45%,
+    transparent 75%
+  );
+  animation: gold-pulse 1.8s ease-out 1 both;
+}
+
+/* CardMini 当前段落光环 */
+@utility mini-card-active {
+  box-shadow:
+    0 0 0 1.5px var(--color-neon-cyan),
+    0 0 14px rgba(0, 240, 255, 0.45);
+}
+
+/* ============================================================ */
+/*  美化方案 P1-D · 神圣几何 / 慢仪式动效                          */
+/* ============================================================ */
+
+/* 神圣几何缓转 — 120s 线性(慢即是神秘) */
+@keyframes sacred-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@utility sacred-spin {
+  animation: sacred-rotate 120s linear infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+/* EEG 呼吸 — scale 1↔1.04, 4s 平缓循环 */
+@keyframes eeg-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+@utility eeg-breathe {
+  animation: eeg-breathe 4s ease-in-out infinite;
+}
+
+/* 冥想引导 — 2s 渐显渐隐一次(不循环打扰) */
+@keyframes meditation-hint {
+  0% { opacity: 0; }
+  25% { opacity: 0.75; }
+  75% { opacity: 0.75; }
+  100% { opacity: 0; }
+}
+
+@utility meditation-hint-once {
+  animation: meditation-hint 2s ease-in-out 1 both;
+}
+
+/* ============================================================ */
+/*  美化方案 P1-F · 杂志化排版                                     */
+/* ============================================================ */
+
+/* 首字下沉 — 杂志感: 3em 衬线 cyan 大写字头 */
+@utility drop-cap {
+  &::first-letter {
+    font-family: var(--font-serif-cn);
+    font-size: 3em;
+    font-weight: 700;
+    line-height: 0.9;
+    float: left;
+    margin-right: 0.12em;
+    margin-top: 0.05em;
+    color: var(--color-neon-cyan);
+  }
+}
+
+/* ============================================================ */
+/*  美化方案 §4.4 · Button hover 流光扫过(300ms)                  */
+/* ============================================================ */
+@utility flow-sweep {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.18) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%);
+    transition: transform 300ms ease-out;
+    pointer-events: none;
+  }
+
+  &:hover::after {
+    transform: translateX(120%);
   }
 }

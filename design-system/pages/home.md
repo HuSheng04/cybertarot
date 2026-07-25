@@ -100,3 +100,37 @@ Hero 区（顶部）：
 - `/?q=自定义问题` 支持自定义
 - 延迟 1 秒自动触发占卜
 - 面试官零操作可体验
+
+---
+
+## 美化更新（2026-07-25，美化方案 P0-A/B/C + P1-D + P2-G）
+
+### Hero
+- 混排：`CYBER TAROT 2077`（Orbitron xs, tracking 0.5em）+「赛博占卜师」（Noto Serif SC 700, clamp(44px,8vw,84px), tracking 0.12em）
+- 背景 SacredGeometry(hexagram)，月光金，opacity 0.06，120s 缓转
+- 副标题衬线化 + tracking 0.3em
+
+### braindance
+- EEG 环 `eeg-breathe` 4s 呼吸缩放
+- 面板底部微文案 `NEURAL PROTOCOL v2.7.7 · ENCRYPTED`（text-xs, opacity 0.3）
+
+### input
+- 冥想引导「深呼吸，默念你的问题」2s 渐显渐隐一次（`meditation-hint-once`）
+- 字数计数 = 弧形进度环（SVG stroke-dashoffset）+ Rajdhani 数字
+- 深潜按钮 cyan→purple 对角渐变 + `flow-sweep` hover 流光 300ms
+
+### shuffling
+- ShuffleRitual：牌背堆叠 → 扇形洗牌 800ms → 三张依次飞位 600ms（stagger 200ms）→ 溶解 650ms
+- 进度文案三段式「洗牌 → 切牌 → 抽牌」（750ms/段）+ cyan→purple 渐变进度条
+- reduced-motion：仪式整体跳过
+
+### reading（P0-C 核心）
+- ReadingSheet 顶部 CardMiniNav：三缩略图+位置名，点击 scrollIntoView + activePosition 联动 3D，当前段落 mini-card-active 光环
+- 段落标题：`[位置glyph] 标题 · 牌名`（Noto Serif SC）+ Cinzel 英文小字 + 正逆位徽章（正=cyan 满环 / 逆=purple 半环 + 文字，双编码）
+- 正文 `reading-prose`（1.9/0.02em/65ch）；`**加粗句**` 自动提取为 PullQuote（衬线居中 + 两侧金线）
+- 完成时刻 gold-flash 金光脉冲 1800ms 一次；「再来一次」boxShadow 呼吸 3s + flow-sweep
+
+### 全局
+- 背景三层：L1 星云/纹理（body 模式类）+ L2 粒子/星尘 + L3 噪点暗角（html::before）；扫描线 0.1（移动 0.08）
+- Navbar 滚动 >40px 背景加深 + cyan 细线；`app/template.tsx` 400ms 路由淡入
+- Panel 统一 `hud-corner` + backdrop-blur-md

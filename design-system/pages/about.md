@@ -1,67 +1,42 @@
 # CyberTarot — 关于页设计指南
 
 > 覆盖设计系统 Master 中与关于页相关的规则
-> 路由: `/about` | 文件名: `app/about/page.tsx`
+> 路由: `/about` | 文件名: `app/about/page.tsx` + `AboutContent.tsx`
 
 ---
 
 ## 1. 页面目标
 
-展示项目的技术深度、设计理念和开发故事。面向面试官和技术受众。
+个人兴趣驱动开发的作品介绍页。讲述「为什么做这个项目的」创作动机、兴趣领域和世界观，
+语气为第一人称、有亲和力，**不是**简历/面试展示页。
 
-## 2. 布局
+## 2. 内容原则（2026-07-25 改版锁定）
 
-- 阅读宽度：`max-w-3xl`，居中
-- 卡片化 section：`bg-card-surface border border-card-border rounded-xl`
-- 每个 section 使用霓虹青色标题
+- ✅ 第一人称叙事：「我很喜欢…」「于是就做了…」「做得很开心」
+- ✅ 重心：创作动机、沉迷的兴趣点、小项目的运转方式、世界观
+- ✅ 技术只作轻描淡写的注脚（一句带过，不做选型论证）
+- ❌ 禁止：面试/作品集/简历式语言、技术栈选型看板、架构图、开发挑战复盘、
+  与其他项目的组合展示
 
-## 3. 内容区块 (Section Order)
+## 3. 布局与区块顺序
 
-### 3.1 Hero — 概念故事
+- 阅读宽度：`max-w-3xl`，居中；区块间距 `gap-10`；RuneDivider 分隔
+- 背景：`subpage-mode`（星云 25% + 星尘慢漂）
 
-- 标题："关于 CyberTarot"
-- 段落：2077 年 Braindance + 遗物卡牌世界观
-- 风格：叙述性文字，略带赛博诗意
+| # | 区块 | 内容 | 设计 |
+|---|------|------|------|
+| 1 | Hero | 「关于 CyberTarot」+ 一句话定位 | 衬线大标题 + cyan glow |
+| 2 | 缘起 | 创作动机三段叙事 | `drop-cap` 首字下沉 + PullQuote 关键句（金饰线） |
+| 3 | 小数字 | 78 张牌面 / 3 张牌讲故事 / 2 位先知 | CountUp 滚动计数，flex-wrap（防 375px 溢出） |
+| 4 | 最沉迷的部分 | 4 张兴趣卡：画牌 / 仪式感 / 3D 牌桌 / 世界观 | 2 列网格（移动端堆叠），hover 上浮+发光 |
+| 5 | 它是怎么运转的 | 4 步流程卡 + 一句技术注脚 | Cinzel 月光金罗马数字 I–IV 编号 |
+| 6 | 页尾 | GitHub「翻翻源码」/ 站内 `/?demo`「亲自抽一卦」 | 双张大卡；站内链接用 next/link |
 
-### 3.2 技术栈看板
+## 4. 动效
 
-- 网格布局（2列 mobile → 3列 desktop）
-- 每个技术卡片：图标 + 名称 + 一句话理由
-- 包括：Next.js, R3F, Framer Motion, Tailwind CSS, DeepSeek, TypeScript, Sharp, Vercel
-
-### 3.3 系统架构图
-
-- Mermaid 图表展示前后端架构
-- 数据流：用户 → Braindance → Next.js API → DeepSeek → 流式返回
-- 组件树：TarotProvider → ReadingProvider → TarotTable3D → ReadingStream
-
-### 3.4 设计决策
-
-3-4 个关键决策，每项包含：问题 → 方案 → 理由
-1. 为什么预设卡面而非实时生成？（成本/一致性/速度）
-2. 为什么双 Context 架构？（避免流式 token 重渲染 3D）
-3. 为什么 Node.js Serverless 而非 Edge？（DeepSeek 兼容性）
-4. 为什么逐段浮现而非打字机？（展示时间 2s vs 18s）
-
-### 3.5 技术挑战
-
-2-3 个开发中解决的实际问题：
-1. R3F + SSR 冲突（dynamic import 方案）
-2. 纹理内存泄漏（dispose 生命周期管理）
-3. Vercel 10s 超时限制（Prompt 压缩策略）
-
-### 3.6 项目组合
-
-- 与 CopyAI 的对比展示
-- 体现"实用型 + 趣味型"AI 产品广度
-
-## 4. 设计风格
-
-- 保持暗黑主题
-- 代码块风格：深色背景 + 荧光绿文字
-- 卡片使用微发光边框
-- Mermaid 图表使用霓虹配色
-- 整体感觉：技术博客 + 赛博美学
+- 全部 `whileInView` + `once: true`，springGentle/springSmooth
+- Hero/数字使用 variants stagger 传播
+- 沿用 Master §6.1b 仪式动效规范，无页面级新增
 
 ## 5. Master 覆盖
 
@@ -69,3 +44,4 @@
 |------|------|
 | 容器宽度 | max-w-3xl（阅读宽度，非 5xl） |
 | 装饰元素 | 不使用 HUD 装饰（保持阅读干净） |
+| 受众定位 | ~~面试官~~ → 对项目感兴趣的普通访客 |

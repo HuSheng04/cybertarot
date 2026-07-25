@@ -63,3 +63,29 @@
 - **加载中**：网格显示骨架屏（脉冲方块）
 - **数据就绪**：正常展示
 - **图片加载失败**：显示 card_back 占位 + 牌名文字
+
+---
+
+## 美化更新（2026-07-25，美化方案 P1-E）
+
+### 页头
+- 「牌库」Noto Serif SC 700 大标题（tracking 0.2em）+ Rajdhani 小字「78 张遗物卡牌档案」
+- 搜索框：按中文/英文牌名、关键词过滤；空结果提示含搜索词
+
+### Tab
+- 符文胶囊：rounded-full + tracking-widest；激活态 cyan 边框 + 外发光
+- layoutId 滑动指示器加 `shadow-[0_0_8px_#00f0ff]` 发光
+
+### 网格卡牌
+- 大阿卡纳左上角 Cinzel 罗马数字金标（moonlight-gold，0–XXI）
+- hover 3D 倾斜：rotateX/Y ≤±4° 跟随指针（useMotionValue + useSpring），触控指针跳过
+- 全息反光扫过（skew 渐变 700ms）+ 底部 cyan 光晕
+- 牌名英文改 Cinzel
+
+### CardDetailModal
+- 左图右文双栏（max-w-2xl，移动端堆叠）
+- Cinzel 编号（大阿卡纳金色）+ 关键词胶囊云（rounded-full cyan 边）
+- 正位 cyan 左边线 / 逆位 red 左边线分栏
+
+### 背景
+- `subpage-mode`：L1 星云 25% + L2 星尘 60s 慢漂 + shelf-grid 保留

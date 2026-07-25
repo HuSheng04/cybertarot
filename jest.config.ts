@@ -7,9 +7,8 @@ const config: Config = {
   testEnvironment: 'jsdom',
   roots: ['<rootDir>/__tests__'],
   moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
-  // 注意：setupFiles 在 test framework 安装前执行
-  // @testing-library/jest-dom v6 需要运行在 framework 之后
-  // 测试 DOM 组件时，在各测试文件中直接 import 该库
+  // 全局 setup: jest-dom 匹配器 + IntersectionObserver polyfill(framer-motion whileInView)
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 }
 
 export default createJestConfig(config)

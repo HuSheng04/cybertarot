@@ -9,10 +9,15 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".next.bak*/**",
+    "_temp_next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
     "e2e/**",
+    // 第三方技能包脚手架（非项目业务代码，不参与 lint 门槛）
+    ".workbuddy-ai/**",
+    "skills/**",
   ]),
 ]);
 

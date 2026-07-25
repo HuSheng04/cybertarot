@@ -1,5 +1,11 @@
-import type { Metadata } from "next"
-import { Orbitron, Rajdhani, Inter } from "next/font/google"
+import type { Metadata, Viewport } from "next"
+import {
+  Orbitron,
+  Rajdhani,
+  Inter,
+  Noto_Serif_SC,
+  Cinzel,
+} from "next/font/google"
 import { TarotProvider } from "@/components/TarotProvider"
 import "./globals.css"
 
@@ -22,6 +28,32 @@ const inter = Inter({
   subsets: ["latin"],
   display: "swap",
 })
+
+/* ===== 美化方案 P0-A · 中文/神秘学字体 ===== */
+const notoSerifSC = Noto_Serif_SC({
+  variable: "--font-noto-serif-sc",
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  display: "swap",
+})
+
+/* 正文中文按 §7 保底方案退回系统栈: CSS font-stack 仍声明 "Noto Sans SC",
+   已安装该字体的系统原生启用, 未安装则回落系统默认(免去 ~200 个切片下载) */
+
+const cinzel = Cinzel({
+  variable: "--font-cinzel-next",
+  subsets: ["latin"],
+  weight: ["600"],
+  display: "swap",
+})
+
+/* ===== 移动端视口（审计 P2）: 刘海屏 safe-area 全覆盖 + 浏览器主题色 ===== */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0a0a1a",
+}
 
 /* ===== SEO / 社交元数据 ===== */
 export const metadata: Metadata = {
@@ -79,7 +111,7 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className={`${orbitron.variable} ${rajdhani.variable} ${inter.variable} scroll-smooth`}
+      className={`${orbitron.variable} ${rajdhani.variable} ${inter.variable} ${notoSerifSC.variable} ${cinzel.variable} scroll-smooth`}
       data-scroll-behavior="smooth"
     >
       <body className="min-h-dvh flex flex-col bg-deep-space text-text-primary font-body antialiased selection:bg-neon-cyan/20 selection:text-neon-cyan">

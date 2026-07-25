@@ -23,7 +23,7 @@ type PanelProps = {
 export function Panel({ children, className = "", ...motionProps }: PanelProps) {
   return (
     <motion.div
-      className={`relative w-full max-w-2xl mx-auto rounded-xl border border-card-border bg-card-surface/50 backdrop-blur-sm shadow-card ${className}`}
+      className={`hud-corner relative w-full max-w-2xl mx-auto rounded-xl border border-card-border bg-card-surface/50 backdrop-blur-md shadow-card ${className}`}
       {...motionProps}
     >
       {/* 顶部细 cyan 线装饰 */}
