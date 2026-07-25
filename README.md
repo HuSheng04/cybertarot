@@ -2,265 +2,115 @@
 
 > 在 0 与 1 的缝隙中，寻找属于你的命运信号。
 
-**CyberTarot** 是一个融合赛博朋克美学与 AI 塔罗占卜的 Web 应用。用户通过 Braindance 神经接口接入，由 DeepSeek AI 抽取三张遗物卡牌，解读过去、现状与未来。
+一个出于喜欢而做的小项目：把塔罗牌、赛博朋克和 AI 熬成一锅。
+2077 年的赛博先知坐镇终端，你写下心事，她为你洗牌、抽牌，把三张遗物卡牌串成一段解读。
 
-🔮 **在线体验：** [https://cybertarot.vercel.app/?demo](https://cybertarot.vercel.app/?demo)（自动演示模式）
+🔮 **在线体验：** [cybertarot.vercel.app/?demo](https://cybertarot.vercel.app/?demo)（自动演示模式，零操作看全流程）
 
 ---
 
-## 📸 界面预览
+## 界面预览
 
 <p align="center">
-  <img src="docs/screenshots/home-braindance.webp" alt="Braindance 神经接口接入" width="49%" />
-  <img src="docs/screenshots/home-question.webp" alt="冥想终端问题输入" width="49%" />
-</p>
-<p align="center">
-  <em>↑ Braindance 神经接口接入（左）与冥想终端问题输入（右）</em>
+  <img src="docs/screenshots/01-hero.webp" alt="首页 · 赛博占卜师" width="85%" />
+  <br />
+  <em>首页 · 衬线大标题 + 神圣几何，第一眼就是「神秘 × 科技」</em>
 </p>
 
 <br />
 
 <p align="center">
-  <img src="docs/screenshots/home-reading.webp" alt="3D 翻牌 + AI 流式解读" width="80%" />
-</p>
-<p align="center">
-  <em>↑ 3D 翻牌桌 + DeepSeek AI 流式解读段落浮现</em>
+  <img src="docs/screenshots/02-reveal.webp" alt="抽牌揭示" width="49%" />
+  <img src="docs/screenshots/03-reading.webp" alt="AI 流式解读" width="49%" />
+  <br />
+  <em>三张牌阵扫描揭示（左）· DeepSeek 流式解读与迷你牌导航（右）</em>
 </p>
 
 <br />
 
 <p align="center">
-  <img src="docs/screenshots/about.webp" alt="关于页面" width="49%" />
-  <img src="docs/screenshots/cards.webp" alt="牌库百科" width="49%" />
+  <img src="docs/screenshots/04-cards.webp" alt="牌库" width="49%" />
+  <img src="docs/screenshots/05-about.webp" alt="关于页" width="49%" />
+  <br />
+  <em>78 张遗物卡牌档案（左）· 关于页的创作故事（右）</em>
 </p>
+
+<br />
+
 <p align="center">
-  <em>↑ 关于页面（左）与 78 张牌库百科（右）</em>
+  <img src="docs/screenshots/06-mobile-reading.webp" alt="移动端解读" width="32%" />
+  <br />
+  <em>移动端 · 三张牌阵完整可见，解读收进底部卡片</em>
 </p>
 
 ---
 
-## ✨ 核心功能
+## 这个小站能做什么
 
-| 功能 | 说明 |
-|------|------|
-| **Braindance 神经接入** | 赛博朋克风格的 API Key 接入界面，支持服务端默认 Key 或自定义 Key |
-| **3D 翻牌桌** | React Three Fiber 实现的粒子背景 + 三张卡牌 3D 翻转动画 |
-| **AI 流式解读** | DeepSeek API 流式响应，段落分级浮现动画 |
-| **78 张完整牌库** | 22 张大阿卡纳 + 56 张小阿卡纳，支持花色筛选与模态框详情弹窗 |
-| **可折叠解读面板** | 3D 翻牌结果以紧凑底部面板展示，可展开为 75dvh 全量解读 |
-| **键盘无障碍** | `Tab` 导航、`Enter`/`Space` 打开详情、`Esc` 关闭弹窗 |
-| **自动降级** | WebGL 不可用时降级为 CSS 2D 卡牌，API 不可用时使用模板解读 |
-| **面试演示模式** | `/?demo` 参数自动触发完整流程，零操作可达 |
+- **接入仪式** — Braindance 神经接口开场：可以用服务端共享的神谕核心，也可以插入自己的「记忆芯片」（DeepSeek API Key）
+- **洗牌抽牌** — 堆叠 → 扇形洗牌 → 三张依次飞位，牌没发完绝不让你看到牌面
+- **三张牌阵** — 真 3D 牌桌（可以用鼠标转着看），粒子会向牌位汇聚，牌面以扫描溶解的方式逐张揭示
+- **AI 解读** — DeepSeek 流式输出，按「过去 / 现在 / 未来」分段浮现；加粗的诗意句会自动被挑出来放大成引文卡
+- **78 张牌库** — 木刻版画风的全套牌面，支持搜索和花色筛选，大阿卡纳有专属的罗马数字金标
+- **随处降级** — WebGL 挂了变 CSS 2D，API 挂了换本地模板解读，尽量不让仪式中断
 
-## 🖥️ 技术栈
+## 技术栈
 
-| 层 | 技术 | 用途 |
-|----|------|------|
-| 框架 | **Next.js 16** (App Router) | React Server Components + 流式 SSR |
-| 3D | **React Three Fiber** + drei | WebGL 3D 翻牌桌与粒子背景 |
-| 动画 | **Motion** (Framer Motion) | 页面过渡、段落浮现、交互动效 |
-| AI | **DeepSeek API** (streaming) | 流式塔罗解读，10s 超时 + 自动重试 |
-| 样式 | **Tailwind CSS v4** | 暗黑赛博配色系统 |
-| 图片 | **Sharp** | 78 张卡面 PNG → WebP 批量压缩 |
-| 语言 | **TypeScript** | 全量类型覆盖 |
-| 部署 | **Vercel** | 自动 CI/CD，Hobby Plan |
+| 层 | 选择 |
+|----|------|
+| 框架 | Next.js 16（App Router）+ TypeScript |
+| 3D | React Three Fiber + drei（翻牌桌、粒子背景） |
+| 动画 | Motion（页面过渡、洗牌仪式、段落浮现） |
+| AI | DeepSeek API（流式，超时重试 + 模板降级） |
+| 样式 | Tailwind CSS v4（自建的霓虹神秘主义设计系统） |
+| 图片 | Sharp（78 张牌面批量压缩为 WebP） |
+| 部署 | Vercel |
 
-## 🏗️ 系统架构
-
-```
-┌─────────────────────────────────────────────────────┐
-│                    🖥  Client                         │
-│  ┌──────────┐  ┌──────────┐  ┌───────────────────┐  │
-│  │Braindance│──→│Question  │──→│TarotTable3D(R3F) │  │
-│  │Portal    │  │Input     │  │+ ParticleBg       │  │
-│  └──────────┘  └──────────┘  └────────┬──────────┘  │
-│                                       │              │
-│  ┌────────────────────────────────────▼───────────┐  │
-│  │          ReadingStream (SSE 流式)              │  │
-│  └──────────────────────┬─────────────────────────┘  │
-└─────────────────────────┼───────────────────────────┘
-                          │ POST /api/reading
-┌─────────────────────────▼───────────────────────────┐
-│                   🖥  Server                         │
-│  ┌───────────────────────────────────────────────┐  │
-│  │  Route Handler /api/reading                   │  │
-│  │  ├─ AbortController (客户端断开中止)          │  │
-│  │  ├─ 自动重试 (最多 2 次, 间隔 1s)            │  │
-│  │  └─ 全部失败 → 模板降级 (5 套)               │  │
-│  └───────────────────┬───────────────────────────┘  │
-│                      │ DeepSeek API                  │
-│  ┌───────────────────▼───────────────────────────┐  │
-│  │  DeepSeek Chat (stream=true)                  │  │
-│  │  系统 Prompt ~600 字 + 用户 Prompt           │  │
-│  └───────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────┘
-```
-
-## 📦 本地开发
+## 本地跑起来
 
 ```bash
-# 1. 克隆仓库
-git clone https://github.com/你的用户名/cybertarot.git
-cd cybertarot
-
-# 2. 安装依赖
+git clone https://github.com/w3118597378-max/CyberTarot.git
+cd CyberTarot
 pnpm install
 
-# 3. 配置环境变量
-cp .env.local.example .env.local
-# 编辑 .env.local，填入 DeepSeek API Key（可选，也支持前端输入）
+# 可选：配置服务端 Key（不配也能玩，前端会引导你输入）
+cp .env.example .env.local   # 填入 DEEPSEEK_API_KEY=sk-...
 
-# 4. 启动开发服务器
-pnpm dev
-# 访问 http://localhost:3000
-
-# 5. 运行测试
-pnpm test
-# 90 个测试用例验证核心功能
-
-# 6. 生产构建
-pnpm build
+pnpm dev                      # http://localhost:3000
+pnpm test                     # 90 个测试用例
+pnpm build                    # 生产构建
 ```
 
-## 🎮 演示模式
+想直接看完整流程？访问 `/?demo` 会自动提问并走完全程；`/?q=你的问题` 可以自定义。
 
-访问 `/?demo` 参数即可自动触发完整占卜流程：
+## 做的时候，最沉迷的部分
 
-```
-https://cybertarot.vercel.app/?demo
-```
+- **画一套自己的牌** — 78 张牌面全是木刻版画风：金属画框、做旧纸面、瞳孔里一点青光。为了让 22 张大阿卡纳看起来比小牌「更神圣」，边框做旧调了很多版
+- **把抽牌做成仪式** — 不想让它像「查询结果」。发牌和揭示是两个严格分开的阶段，节奏对了，神秘感才对
+- **慢即是神秘** — 环境动效全部 ≥1200ms：EEG 环 4s 呼吸、神圣几何 120s 缓转、星尘 60s 漂移；交互反馈保持 ≤300ms。快是科技，慢是仪式
+- **中文字体的执念** — 标题用 Noto Serif SC 衬线切片加载，解读正文按 65ch 行长、1.9 倍行高排出「书感」，塔罗感不能全靠拉丁字体撑
 
-也可使用自定义问题：
-```
-https://cybertarot.vercel.app/?q=我最近的感情运势如何？
-```
-
-## 📁 项目结构
+## 项目结构（节选）
 
 ```
 src/
 ├── app/
-│   ├── page.tsx              # 首页（Phase 驱动全流程）
-│   ├── layout.tsx            # 全局布局 + SEO metadata
-│   ├── about/page.tsx        # 关于页面
-│   ├── cards/page.tsx        # 牌库百科页面
-│   └── api/
-│       ├── reading/route.ts  # DeepSeek 流式 API 路由
-│       └── verify-key/route.ts # API Key 验证路由
+│   ├── page.tsx             # 首页：Phase 状态机驱动全流程
+│   ├── cards/page.tsx       # 牌库
+│   ├── about/               # 关于页（这个项目的创作故事）
+│   └── api/reading/         # DeepSeek 流式路由（重试 + 模板降级）
 ├── components/
-│   ├── TarotProvider.tsx      # 核心流程状态管理
-│   ├── BraindancePortal.tsx   # 神经接口接入界面
-│   ├── QuestionInput.tsx      # 冥想终端输入区
-│   ├── TarotTable3D.tsx       # 3D 翻牌桌主场景
-│   ├── CardMesh.tsx           # 单张 3D 卡牌
-│   ├── ParticleBg.tsx         # 粒子背景
-│   ├── CardSkeleton.tsx       # 骨架屏
-│   ├── R3FErrorBoundary.tsx   # WebGL 降级边界
-│   ├── ReadingStream.tsx      # 流式解读展示
-│   ├── ReadingSheet.tsx       # 可折叠底部解读面板
-│   ├── CardDetailModal.tsx    # 卡牌详情无障碍弹窗
-│   ├── ArchitectureFlow.tsx   # 响应式系统架构图
-│   ├── icons/
-│   │   └── OracleGlyph.tsx    # 本地 SVG 图标集
-│   ├── DemoTrigger.tsx        # 面试演示触发器
-│   ├── Navbar.tsx             # 导航栏
-│   ├── HeroOpening.tsx        # 开场动画
-│   └── Panel.tsx              # 内容面板容器
-├── data/
-│   └── cards.ts               # 78 张塔罗牌数据
-├── lib/
-│   ├── drawEngine.ts          # Fisher-Yates 洗牌引擎
-│   ├── deepseek.ts            # DeepSeek API 客户端
-│   ├── fallbackReadings.ts    # 模板解读降级
-│   ├── motionTokens.ts        # 动画常量
-│   └── useFirstVisit.ts       # 首次访问 Hook
-└── types/
-    └── index.ts               # TypeScript 类型定义
+│   ├── TarotTable3D.tsx     # 3D 牌桌（响应式相机）
+│   ├── ShuffleRitual.tsx    # 洗牌仪式：堆叠→扇形→飞位→溶解
+│   ├── ReadingSheet.tsx     # 底部解读卡片（紧凑/展开双态）
+│   └── …
+├── data/cards.ts            # 78 张牌数据
+└── lib/                     # 洗牌引擎 / API 客户端 / 动效常量
 
-design-system/                 # 设计系统文档
-├── MASTER.md
-└── pages/
-    ├── home.md
-    ├── about.md
-    └── cards.md
-
-public/assets/cards/           # 78+1 张卡牌图片
+design-system/               # 设计系统文档（唯一的视觉规则源）
+docs/screenshots/            # README 截图
 ```
 
-## 🧪 测试覆盖
-
-```
-✓ 90 tests passed (10 test suites)
-
-- cards.test.ts    → 78 张牌数量/ID/花色/字段验证
-- drawEngine.test.ts → 洗牌算法/正逆位概率/分布验证
-- Navbar.test.tsx  → 品牌标识、SVG 图标、响应式导航
-- ReadingSheet.test.tsx → 紧凑/展开状态、aria-expanded、回调传递
-- ReadingStream.test.tsx → 流式段落、位置标记、卡牌名称
-- CardDetailModal.test.tsx → 对话框打开/关闭、Escape/背板/筛选切换
-- ArchitectureFlow.test.tsx → 节点顺序、无 pre 元素
-- 组件/集成测试 → 核心流程验证
-```
-
-## 🚀 部署
-
-项目已预配置 Vercel 部署：
-
-1. Fork 或推送代码到 GitHub
-2. 在 [Vercel](https://vercel.com) 导入仓库
-3. 设置环境变量 `DEEPSEEK_API_KEY`
-4. 部署完成！
-
-也可自定义域名：
-```bash
-# vercel.json 已预配置，无需额外修改
-```
-
-## ⚡ 性能目标
-
-| 指标 | 目标 |
-|------|------|
-| FCP | < 2s |
-| TTI | < 3s |
-| 3D 首次加载 | < 3s |
-| LLM 首 token | < 4s |
-| 单次占卜 | ≤ 15s |
-
-## ⌨️ 键盘快捷键
-
-| 快捷键 | 功能 |
-|--------|------|
-| `Tab` / `Shift+Tab` | 在导航链接、卡牌和控件间切换焦点 |
-| `Enter` / `Space` | 激活焦点元素（打开卡牌详情等） |
-| `Esc` | 关闭模态框 / 取消正在进行的解读 |
-| `Esc`（解读中） | 取消流式解读并中止 AI 请求 |
-
-## 🛡️ 降级保障
-
-- **WebGL 不可用** → 自动降级 CSS 2D 卡牌，保留 HUD 风格
-- **DeepSeek API 不可用** → 无感切换 5 套模板解读
-- **网络中断** → 错误提示 + 重试连接
-- **每日限额** → localStorage 30 次/日计数器
-
-## 📋 面试话术要点
-
-### 技术亮点
-1. **全栈 AI 产品**：Next.js App Router + R3F 3D 渲染 + DeepSeek 流式 AI
-2. **容错设计**：三层降级（WebGL → CSS 2D / API → 模板 / 超时 → 重试）
-3. **性能优化**：图片批量压缩、3D 懒加载、纹理内存管理、低配模式
-4. **用户体验**：赛博朋克 UI 一致性、开场动画引导、Phase 状态机驱动
-
-### 架构决策
-- 为什么用 R3F 而不是纯 CSS：面试展示 3D 能力，同时 ErrorBoundary 保障降级
-- 为什么状态用 useReducer：多状态转换清晰可控，便于调试
-- 为什么不分 ReadingProvider：ReadingStream 本地状态已隔离，避免过度抽象
-
----
-
-## 📄 许可证
+## 许可证
 
 MIT
-
----
-
-> 本项目为前端/AI 全栈面试作品集的一部分，展示 Next.js App Router + R3F 3D 渲染 + DeepSeek AI 集成能力。
