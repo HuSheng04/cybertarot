@@ -170,7 +170,7 @@ export default function HomePage() {
   }, [phase, isReady, isFirstVisit, introComplete])
 
   /* ---- 判断当前哪些区域应该显示 ---- */
-  const showBraindance = phase === "braindance" && !apiKey
+  const showBraindance = phase === "braindance"
   const showInput = phase === "input"
   const showTable3D = phase !== "braindance" && phase !== "input"
   const showReading = phase === "reading" || phase === "done"

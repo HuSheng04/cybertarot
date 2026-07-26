@@ -251,7 +251,8 @@ function HexRain() {
 /* ============================================================ */
 
 export function BraindancePortal() {
-  const { setApiKey } = useTarot()
+  const { state, setApiKey } = useTarot()
+  const savedKey = state.apiKey // 从 localStorage 恢复的 Key（如果有）
 
   const [mode, setMode] = useState<"select" | "server" | "custom">("select")
   const [customKey, setCustomKey] = useState("")
@@ -437,6 +438,40 @@ export function BraindancePortal() {
                 </div>
               </div>
             </motion.button>
+
+            {/* --- 已保存的记忆芯片（本地有 Key 时显示）--- */}
+            {savedKey && (
+              <motion.button
+                type="button"
+                onClick={() => {
+                  setApiKey(savedKey)
+                }}
+                whileHover={{ y: -2 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20, mass: 0.5 }}
+                className="group relative w-full rounded-xl border border-moonlight-gold/40 bg-moonlight-gold/5 p-4 pl-5 text-left transition-colors duration-200 hover:border-moonlight-gold/60 hover:bg-moonlight-gold/10"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="relative flex h-8 w-8 items-center justify-center shrink-0">
+                    <span className="h-3 w-3 rounded-full bg-moonlight-gold shadow-[0_0_10px_#c9a96e]" />
+                  </span>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="font-subheading text-sm font-semibold tracking-wide text-moonlight-gold">
+                      使用已保存的记忆芯片
+                    </p>
+                    <p className="mt-0.5 font-mono text-xs text-text-muted">
+                      {savedKey.slice(0, 8)}...{savedKey.slice(-4)}
+                    </p>
+                  </div>
+
+                  <div className="relative flex items-center shrink-0">
+                    <span className="font-mono text-sm text-moonlight-gold/60 group-hover:text-moonlight-gold transition-colors tracking-[3px]">
+                      {">>>"}
+                    </span>
+                  </div>
+                </div>
+              </motion.button>
+            )}
 
             {/* --- Task 3.3: 神经突触按钮 — 插入记忆芯片 --- */}
             <motion.button

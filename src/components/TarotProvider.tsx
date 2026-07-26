@@ -43,6 +43,7 @@ interface TarotState {
 
 type TarotAction =
   | { type: "SET_API_KEY"; payload: string | null }
+  | { type: "RESTORE_SAVED_KEY"; payload: string | null }
   | { type: "SUBMIT_QUESTION"; payload: string }
   | { type: "FINISH_FLIP" }
   | { type: "FINISH_READING" }
@@ -166,6 +167,13 @@ function tarotReducer(state: TarotState, action: TarotAction): TarotState {
         error: null,
       }
 
+    case "RESTORE_SAVED_KEY":
+      return {
+        ...state,
+        apiKey: action.payload,
+        // 不改变 phase — 让用户仍看到 BraindancePortal 做选择
+      }
+
     case "SUBMIT_QUESTION": {
       // 检查每日限额
       const { isLimited } = checkDailyLimit()
@@ -249,7 +257,7 @@ export function TarotProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const savedKey = loadApiKey()
     if (savedKey) {
-      dispatch({ type: "SET_API_KEY", payload: savedKey })
+      dispatch({ type: "RESTORE_SAVED_KEY", payload: savedKey })
     }
   }, [])
 
