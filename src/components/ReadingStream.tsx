@@ -245,12 +245,19 @@ export function ReadingStream({
           }
 
           if (parsed.type === "fallback" && parsed.content) {
-            // 降级模式 — 直接解析全文
+            // 旧版模板降级（兼容，实际不再触发）— 直接解析全文
             bufferRef.current = parsed.content
             const [completed] = extractParagraphs(bufferRef.current)
             setParagraphs(completed)
             setStreamingTitle("")
             setStreamingContent("")
+          }
+
+          if (parsed.type === "error" && parsed.content) {
+            // API 错误 — 展示错误信息让用户重试
+            setHasError(true)
+            setErrorMessage(parsed.content)
+            setIsStreaming(false)
           }
 
           if (parsed.type === "done") {

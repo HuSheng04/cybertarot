@@ -7,12 +7,11 @@
  * - AbortController 客户端断开时中止
  * - 自动重试最多 2 次，间隔 1s
  * - 超时 10s
- * - 全部失败 → 模板降级
+ * - 全部失败 → 返回错误（前端展示重试按钮）
  */
 
 import { NextRequest } from "next/server"
 import { createReadingStream } from "@/lib/deepseek"
-import { getFallbackReading } from "@/lib/fallbackReadings"
 import type { DrawnCard } from "@/types"
 
 /* =================================================== */
@@ -137,9 +136,8 @@ export async function POST(request: NextRequest) {
           } catch {
             // 流读取异常
             if (!abortController.signal.aborted) {
-              // 放弃流式，使用模板降级
-              const fallback = getFallbackReading(cards)
-              controller.enqueue(encodeSSE(JSON.stringify({ type: "fallback", content: fallback })))
+              const errMsg = lastError?.message || "神谕核心数据流中断"
+              controller.enqueue(encodeSSE(JSON.stringify({ type: "error", content: errMsg })))
             }
           } finally {
             controller.close()
@@ -147,10 +145,9 @@ export async function POST(request: NextRequest) {
           return
         }
 
-        // ---- API 全部失败 — 模板降级 ----
-        const fallback = getFallbackReading(cards)
-        controller.enqueue(encodeSSE(JSON.stringify({ type: "fallback", content: fallback })))
-        controller.enqueue(encodeSSE(JSON.stringify({ type: "done" })))
+        // ---- API 全部失败 — 返回错误让前端展示重试 ----
+        const errMsg = lastError?.message || "无法连接到神谕核心"
+        controller.enqueue(encodeSSE(JSON.stringify({ type: "error", content: errMsg })))
         controller.close()
       },
 
