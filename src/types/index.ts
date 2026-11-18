@@ -23,23 +23,6 @@ export interface Card {
   element: "火" | "水" | "风" | "土"
   /** 塔罗编号：大阿卡纳 0-21，小阿卡纳数字牌 1-10，宫廷牌按 Page/Knight/Queen/King 为 11-14 */
   number: number
-  /** RWS 牌面的关键视觉元素描述，供 LLM 看图说话 */
+  /** RWS 牌面的关键视觉元素描述 */
   imagery: string
 }
-
-/** 已抽卡牌（含位置与正逆位） */
-export interface DrawnCard {
-  card: Card
-  isReversed: boolean
-  position: "past" | "present" | "future"
-}
-
-/** 占卜流程阶段 */
-export type Phase =
-  | "braindance"
-  | "input"
-  | "shuffling"
-  | "drawing"
-  | "reading"
-  | "done"
-  | "error"

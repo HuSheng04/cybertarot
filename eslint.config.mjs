@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 预编译的 MediaPipe 运行时，由同步脚本复制并适配日志级别。
+    "public/mediapipe/wasm/**",
     "e2e/**",
     // 第三方技能包脚手架（非项目业务代码，不参与 lint 门槛）
     ".workbuddy-ai/**",

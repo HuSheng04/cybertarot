@@ -1,25 +1,16 @@
 import type { Metadata, Viewport } from "next"
 import {
   Orbitron,
-  Rajdhani,
   Inter,
   Noto_Serif_SC,
   Cinzel,
 } from "next/font/google"
-import { TarotProvider } from "@/components/TarotProvider"
 import "./globals.css"
 
 /* ===== 字体配置 ===== */
 const orbitron = Orbitron({
   variable: "--font-orbitron",
   subsets: ["latin"],
-  display: "swap",
-})
-
-const rajdhani = Rajdhani({
-  variable: "--font-rajdhani",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 })
 
@@ -61,34 +52,34 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_APP_URL || "https://cybertarot.vercel.app",
   ),
   title: {
-    default: "CyberTarot 赛博占卜师 — AI 塔罗占卜",
-    template: "%s — CyberTarot 赛博占卜师",
+    default: "CyberTarot 卡片画廊 — 78 张塔罗牌",
+    template: "%s — CyberTarot 卡片画廊",
   },
   description:
-    "2077 年，赛博先知为你抽取三张遗物卡牌，用 DeepSeek AI 深度解读过去、现状与未来。",
-  keywords: ["塔罗占卜", "AI 占卜", "赛博朋克", "CyberTarot", "DeepSeek", "塔罗牌"],
+    "免登录浏览全部 78 张塔罗牌，欣赏完整牌面与中英文牌名。左右滑动，开启你的卡片漫游。",
+  keywords: ["塔罗牌画廊", "卡片画廊", "赛博朋克", "CyberTarot", "78 张塔罗牌"],
   openGraph: {
-    title: "CyberTarot 赛博占卜师 — AI 塔罗占卜",
+    title: "CyberTarot 卡片画廊 — 78 张塔罗牌",
     description:
-      "2077 年，赛博先知为你抽取三张遗物卡牌，用 DeepSeek AI 深度解读过去、现状与未来。",
+      "免登录浏览全部 78 张塔罗牌，欣赏完整牌面与中英文牌名。左右滑动，开启你的卡片漫游。",
     type: "website",
     locale: "zh_CN",
     siteName: "CyberTarot",
     images: [
       {
-        url: "/og-image.webp",
-        width: 1200,
-        height: 630,
-        alt: "CyberTarot 赛博占卜师",
+        url: "/assets/cards/major_00.webp",
+        width: 497,
+        height: 700,
+        alt: "CyberTarot 卡片画廊",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CyberTarot 赛博占卜师 — AI 塔罗占卜",
+    title: "CyberTarot 卡片画廊 — 78 张塔罗牌",
     description:
-      "2077 年，赛博先知为你抽取三张遗物卡牌，用 DeepSeek AI 深度解读过去、现状与未来。",
-    images: ["/assets/cards/card_back.webp"],
+      "免登录浏览全部 78 张塔罗牌，欣赏完整牌面与中英文牌名。左右滑动，开启你的卡片漫游。",
+    images: ["/assets/cards/major_00.webp"],
   },
   robots: {
     index: true,
@@ -111,11 +102,11 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className={`${orbitron.variable} ${rajdhani.variable} ${inter.variable} ${notoSerifSC.variable} ${cinzel.variable} scroll-smooth`}
+      className={`${orbitron.variable} ${inter.variable} ${notoSerifSC.variable} ${cinzel.variable} scroll-smooth`}
       data-scroll-behavior="smooth"
     >
       <body className="min-h-dvh flex flex-col bg-deep-space text-text-primary font-body antialiased selection:bg-neon-cyan/20 selection:text-neon-cyan">
-        <TarotProvider>{children}</TarotProvider>
+        {children}
       </body>
     </html>
   )

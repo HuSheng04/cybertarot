@@ -1,155 +1,161 @@
-import "@testing-library/jest-dom"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
+import HomePage from "@/app/page"
 import CardsPage from "@/app/cards/page"
+import AboutPage from "@/app/about/page"
+import { CARDS } from "@/data/cards"
+import * as handSwipe from "@/hooks/useHandSwipe"
+import type { SwipeDirection } from "@/lib/handSwipe"
 
-// Mock motion
-jest.mock("motion/react", () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const MotionDiv = ({ initial: _i, animate: _a, exit: _e, transition: _t, layout: _l, children, ...props }: Record<string, unknown>) => (
-    <div {...props}>{children as React.ReactNode}</div>
-  )
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const MotionButton = ({ initial: _i, animate: _a, exit: _e, transition: _t, layout: _l, whileHover: _wh, children, ...props }: Record<string, unknown>) => (
-    <button {...props}>{children as React.ReactNode}</button>
-  )
+jest.mock("@/hooks/useHandSwipe", () => ({
+  ...jest.requireActual("@/hooks/useHandSwipe"),
+  useHandSwipe: jest.fn(jest.requireActual("@/hooks/useHandSwipe").useHandSwipe),
+}))
 
-  const mockMotionValue = () => ({
-    set: () => {},
-    get: () => 0,
-    on: () => () => {},
+jest.mock("next/navigation", () => ({
+  redirect: jest.fn(() => { throw new Error("NEXT_REDIRECT") }),
+}))
+
+import { redirect } from "next/navigation"
+
+const scrollToMock = jest.fn()
+let resizeCallback: ResizeObserverCallback
+const disconnectMock = jest.fn()
+
+beforeEach(() => {
+  jest.clearAllMocks()
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: jest.fn(() => ({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() })),
   })
-
-  return {
-    motion: { div: MotionDiv, button: MotionButton },
-    AnimatePresence: ({ children }: Record<string, unknown>) => <>{children}</>,
-    useMotionValue: mockMotionValue,
-    useSpring: mockMotionValue,
-  }
+  HTMLElement.prototype.scrollTo = scrollToMock
+  global.ResizeObserver = jest.fn().mockImplementation((callback: ResizeObserverCallback) => {
+    resizeCallback = callback
+    return { observe: jest.fn(), disconnect: disconnectMock }
+  })
 })
 
-// Mock Navbar
-jest.mock("@/components/Navbar", () => ({
-  __esModule: true,
-  default: function MockNavbar() {
-    return <nav data-testid="navbar" />
-  },
-}))
+function setupGallery() {
+  const result = render(<HomePage />)
+  const viewport = screen.getByRole("region", { name: "塔罗牌画廊" })
+  Object.defineProperty(viewport, "clientWidth", { configurable: true, value: 390 })
+  const scrollToIndex = (index: number) => {
+    fireEvent.scroll(viewport, { target: { scrollLeft: index * 390 } })
+  }
+  return { ...result, viewport, scrollToIndex }
+}
 
-// Mock CardDetailModal
-jest.mock("@/components/CardDetailModal", () => ({
-  CardDetailModal: function MockModal({ card, onClose }: { card: unknown; onClose: () => void }) {
-    if (!card) return null
-    return (
-      <div data-testid="card-detail-modal">
-        <button data-testid="modal-close" onClick={onClose}>
-          Close
-        </button>
-      </div>
+describe("首页卡片画廊", () => {
+  test("无需登录即可看到愚人和 1 / 78，首张禁用上一张", () => {
+    setupGallery()
+    expect(screen.getByRole("heading", { name: "愚人" })).toBeVisible()
+    expect(screen.getByRole("img", { name: "愚人 / The Fool" })).toHaveAttribute(
+      "src", expect.stringContaining("major_00.webp"),
     )
-  },
-}))
-
-// Mock next/image
-jest.mock("next/image", () => ({
-  __esModule: true,
-  default: function MockImage(props: Record<string, unknown>) {
-    return <img {...props} />
-  },
-}))
-
-describe("CardsPage", () => {
-  beforeEach(() => {
-    // Mock scrollTo to prevent JSDOM errors
-    window.scrollTo = jest.fn()
+    expect(screen.getByRole("status")).toHaveTextContent("1 / 78")
+    expect(screen.getByRole("button", { name: /上一张/ })).toBeDisabled()
+    expect(screen.getByRole("button", { name: /下一张/ })).toBeEnabled()
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
   })
 
-  it("renders the page title", () => {
-    render(<CardsPage />)
-    expect(screen.getByText(/牌库/)).toBeInTheDocument()
+  test("全部牌面遵循数据顺序，只有首张优先加载", () => {
+    const { viewport } = setupGallery()
+    const images = viewport.querySelectorAll("img")
+    expect(images).toHaveLength(CARDS.length)
+    images.forEach((image, index) => {
+      expect(image).toHaveAttribute("alt", `${CARDS[index].nameZh} / ${CARDS[index].nameEn}`)
+      expect(image).toHaveAttribute("src", expect.stringContaining(`${CARDS[index].id}.webp`))
+      if (index > 0) expect(image).toHaveAttribute("loading", "lazy")
+    })
+    expect(images[0]).not.toHaveAttribute("loading", "lazy")
   })
 
-  it("renders all filter tabs", () => {
-    render(<CardsPage />)
+  test("按钮只发起滚动，实际滚动后才同步牌名、页码和边界", () => {
+    const { scrollToIndex } = setupGallery()
+    fireEvent.click(screen.getByRole("button", { name: /下一张/ }))
+    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 390, behavior: "smooth" })
+    expect(screen.getByRole("status")).toHaveTextContent("1 / 78")
 
-    // Use getByText for filter tabs to avoid matching card buttons with same Chinese text
-    expect(screen.getByText("全部")).toBeInTheDocument()
-    expect(screen.getByText("大阿卡纳")).toBeInTheDocument()
-    expect(screen.getByText("权杖")).toBeInTheDocument()
-    expect(screen.getByText("圣杯")).toBeInTheDocument()
-    expect(screen.getByText("宝剑")).toBeInTheDocument()
-    expect(screen.getByText("星币")).toBeInTheDocument()
+    scrollToIndex(1)
+    expect(screen.getByRole("heading", { name: "魔术师" })).toBeVisible()
+    expect(screen.getByRole("status")).toHaveTextContent("2 / 78")
+    fireEvent.click(screen.getByRole("button", { name: /上一张/ }))
+    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 0, behavior: "smooth" })
+
+    scrollToIndex(CARDS.length - 1)
+    expect(screen.getByRole("status")).toHaveTextContent("78 / 78")
+    expect(screen.getByRole("heading", { name: CARDS.at(-1)!.nameZh })).toBeVisible()
+    expect(screen.getByRole("button", { name: /下一张/ })).toBeDisabled()
+    expect(screen.getByRole("button", { name: /上一张/ })).toBeEnabled()
+
+    scrollToIndex(0)
+    expect(screen.getByRole("button", { name: /上一张/ })).toBeDisabled()
   })
 
-  it("shows all cards by default (All filter)", () => {
-    render(<CardsPage />)
-
-    // The page shows a count: "显示 78 / 78 张"
-    expect(screen.getByText(/78 \/ 78/)).toBeInTheDocument()
+  test("手动滑动后，按钮从当前牌继续翻页", () => {
+    const { scrollToIndex } = setupGallery()
+    scrollToIndex(23)
+    expect(screen.getByRole("status")).toHaveTextContent("24 / 78")
+    expect(screen.getByRole("heading", { name: CARDS[23].nameZh })).toBeVisible()
+    fireEvent.click(screen.getByRole("button", { name: /下一张/ }))
+    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 24 * 390, behavior: "smooth" })
   })
 
-  it("Wands tab shows only wands cards", () => {
-    render(<CardsPage />)
-
-    // Click the tab rendered with text "权杖"
-    const wandsTab = screen.getByText("权杖").closest("button")
-    expect(wandsTab).not.toBeNull()
-    fireEvent.click(wandsTab!)
-
-    // Wands has 14 cards
-    expect(screen.getByText(/14 \/ 78/)).toBeInTheDocument()
+  test("窗口宽度变化后，保持当前牌居中并清理监听", () => {
+    const { viewport, scrollToIndex, unmount } = setupGallery()
+    scrollToIndex(15)
+    Object.defineProperty(viewport, "clientWidth", { value: 844 })
+    resizeCallback([], {} as ResizeObserver)
+    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 15 * 844, behavior: "auto" })
+    expect(screen.getByRole("status")).toHaveTextContent("16 / 78")
+    unmount()
+    expect(disconnectMock).toHaveBeenCalled()
   })
 
-  it("Wands tab label does not have redundant text", () => {
-    render(<CardsPage />)
-
-    const wandsTab = screen.getByText("权杖").closest("button")
-    // Should not contain "权杖(权杖)" — redundant pair
-    expect(wandsTab?.textContent).not.toMatch(/权杖\(/)
+  test("支持键盘翻页，减少动态效果时直接定位", () => {
+    const { viewport } = setupGallery()
+    jest.mocked(window.matchMedia).mockReturnValue({ matches: true } as MediaQueryList)
+    fireEvent.keyDown(viewport, { key: "End" })
+    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 77 * 390, behavior: "auto" })
+    fireEvent.keyDown(viewport, { key: "Home" })
+    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 0, behavior: "auto" })
+    fireEvent.keyDown(viewport, { key: "ArrowRight" })
+    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 390, behavior: "auto" })
   })
 
-  it("clicking a card opens the detail modal", () => {
-    render(<CardsPage />)
-
-    // Click the first card — get by the contained text (愚人)
-    const firstCard = screen.getByText("愚人")
-    fireEvent.click(firstCard)
-
-    expect(screen.getByTestId("card-detail-modal")).toBeInTheDocument()
+  test("手势共用实际页码，和键盘交替翻页时保持首尾边界", () => {
+    let swipe!: (direction: SwipeDirection) => void
+    const mock = jest.mocked(handSwipe.useHandSwipe).mockImplementation((callback) => {
+      swipe = callback
+      return {
+        videoRef: { current: null }, status: "running", error: null,
+        start: jest.fn(), stop: jest.fn(),
+      }
+    })
+    try {
+      const { viewport, scrollToIndex } = setupGallery()
+      act(() => swipe("right"))
+      expect(scrollToMock).toHaveBeenLastCalledWith({ left: 0, behavior: "smooth" })
+      act(() => swipe("left"))
+      expect(scrollToMock).toHaveBeenLastCalledWith({ left: 390, behavior: "smooth" })
+      scrollToIndex(1)
+      fireEvent.keyDown(viewport, { key: "ArrowRight" })
+      expect(scrollToMock).toHaveBeenLastCalledWith({ left: 780, behavior: "smooth" })
+      scrollToIndex(2)
+      act(() => swipe("right"))
+      expect(scrollToMock).toHaveBeenLastCalledWith({ left: 390, behavior: "smooth" })
+      scrollToIndex(77)
+      act(() => swipe("left"))
+      expect(scrollToMock).toHaveBeenLastCalledWith({ left: 77 * 390, behavior: "smooth" })
+      expect(screen.getByRole("status")).toHaveTextContent("78 / 78")
+    } finally {
+      mock.mockImplementation(jest.requireActual("@/hooks/useHandSwipe").useHandSwipe)
+    }
   })
+})
 
-  it("changing filter closes the detail modal", () => {
-    render(<CardsPage />)
-
-    // Open modal by clicking a card
-    const firstCard = screen.getByText("愚人")
-    fireEvent.click(firstCard)
-    expect(screen.getByTestId("card-detail-modal")).toBeInTheDocument()
-
-    // Switch filter
-    const majorTab = screen.getByRole("button", { name: /大阿卡纳/i })
-    fireEvent.click(majorTab)
-
-    expect(screen.queryByTestId("card-detail-modal")).not.toBeInTheDocument()
-  })
-
-  it("render correct number of grid columns on desktop", () => {
-    render(<CardsPage />)
-
-    const grid = document.querySelector(".grid")
-    expect(grid).toBeInTheDocument()
-    // Should have grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
-    const classList = grid?.className ?? ""
-    expect(classList).toContain("grid-cols-2")
-    expect(classList).toContain("lg:grid-cols-5")
-    // Should NOT have xl:grid-cols-6
-    expect(classList).not.toContain("xl:grid-cols-6")
-  })
-
-  it("has accessible card items (semantic buttons or clickable)", () => {
-    render(<CardsPage />)
-
-    // All cards should be reachable as clickable elements
-    const cards = screen.getAllByText("愚人")
-    expect(cards.length).toBeGreaterThanOrEqual(1)
+describe("旧入口跳转", () => {
+  test.each([CardsPage, AboutPage])("统一重定向到首页", (Page) => {
+    expect(() => Page()).toThrow("NEXT_REDIRECT")
+    expect(redirect).toHaveBeenCalledWith("/")
   })
 })

@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
 
 # next.js
 /.next/
@@ -71,3 +73,6 @@ next-env.d.ts
 skills-lock.json
 
 .vercel
+
+# local pnpm cache
+/.pnpm-store/

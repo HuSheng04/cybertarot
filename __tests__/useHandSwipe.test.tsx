@@ -1,0 +1,183 @@
+import { act, renderHook } from "@testing-library/react"
+import { useHandSwipe } from "@/hooks/useHandSwipe"
+
+const createDetector = jest.fn()
+const resolveFiles = jest.fn()
+jest.mock("@mediapipe/tasks-vision", () => ({
+  FilesetResolver: { forVisionTasks: (...args: unknown[]) => resolveFiles(...args) },
+  HandLandmarker: { createFromOptions: (...args: unknown[]) => createDetector(...args) },
+}))
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((done) => { resolve = done })
+  return { promise, resolve }
+}
+
+function camera() {
+  const track = Object.assign(new EventTarget(), { stop: jest.fn() })
+  const stream = { getTracks: () => [track], getVideoTracks: () => [track] } as unknown as MediaStream
+  return { track, stream }
+}
+
+const getUserMedia = jest.fn()
+let detector: { close: jest.Mock; detectForVideo: jest.Mock }
+let frames: Map<number, FrameRequestCallback>
+let frameId: number
+
+beforeEach(() => {
+  jest.clearAllMocks()
+  frames = new Map()
+  frameId = 0
+  Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia } })
+  Object.defineProperty(window, "isSecureContext", { configurable: true, value: true })
+  jest.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue()
+  jest.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {})
+  jest.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+    frames.set(++frameId, callback)
+    return frameId
+  })
+  jest.spyOn(window, "cancelAnimationFrame").mockImplementation((id) => { frames.delete(id) })
+  detector = { close: jest.fn(), detectForVideo: jest.fn(() => ({ landmarks: [] })) }
+  createDetector.mockResolvedValue(detector)
+  resolveFiles.mockResolvedValue({})
+})
+
+afterEach(() => { jest.restoreAllMocks() })
+
+function setup(onSwipe = jest.fn()) {
+  const hook = renderHook(() => useHandSwipe(onSwipe))
+  const video = document.createElement("video")
+  Object.defineProperty(video, "readyState", { value: 2 })
+  Object.defineProperty(video, "videoWidth", { value: 640 })
+  Object.defineProperty(video, "videoHeight", { value: 480 })
+  hook.result.current.videoRef.current = video
+  return { ...hook, video, onSwipe }
+}
+
+test("只在主动开启后请求摄像头；关闭会取消循环并释放全部资源", async () => {
+  const { stream, track } = camera()
+  getUserMedia.mockResolvedValue(stream)
+  const { result, video } = setup()
+  expect(getUserMedia).not.toHaveBeenCalled()
+  expect(createDetector).not.toHaveBeenCalled()
+  await act(async () => { await result.current.start() })
+  expect(result.current.status).toBe("running")
+  expect(video.srcObject).toBe(stream)
+  expect(frames.size).toBe(1)
+  act(() => result.current.stop())
+  expect(result.current.status).toBe("idle")
+  expect(track.stop).toHaveBeenCalledTimes(1)
+  expect(detector.close).toHaveBeenCalledTimes(1)
+  expect(video.srcObject).toBeNull()
+  expect(frames.size).toBe(0)
+})
+
+test("权限等待时取消并重新开启，迟到的授权只释放旧流", async () => {
+  const pending = deferred<MediaStream>()
+  const old = camera()
+  const current = camera()
+  getUserMedia.mockReturnValueOnce(pending.promise).mockResolvedValueOnce(current.stream)
+  const { result, video } = setup()
+  let firstStart!: Promise<void>
+  act(() => { firstStart = result.current.start() })
+  expect(result.current.status).toBe("starting")
+  act(() => result.current.stop())
+  await act(async () => { await result.current.start() })
+  await act(async () => { pending.resolve(old.stream); await firstStart })
+  expect(old.track.stop).toHaveBeenCalledTimes(1)
+  expect(current.track.stop).not.toHaveBeenCalled()
+  expect(result.current.status).toBe("running")
+  expect(video.srcObject).toBe(current.stream)
+})
+
+test("模型加载时卸载，迟到的识别器也会关闭", async () => {
+  const pending = deferred<typeof detector>()
+  const { stream, track } = camera()
+  getUserMedia.mockResolvedValue(stream)
+  createDetector.mockReturnValue(pending.promise)
+  const { result, unmount, video } = setup()
+  let start!: Promise<void>
+  await act(async () => { start = result.current.start(); await Promise.resolve() })
+  expect(createDetector).toHaveBeenCalled()
+  unmount()
+  expect(track.stop).toHaveBeenCalledTimes(1)
+  expect(video.srcObject).toBeNull()
+  await act(async () => { pending.resolve(detector); await start })
+  expect(detector.close).toHaveBeenCalledTimes(1)
+  expect(frames.size).toBe(0)
+})
+
+test.each([
+  ["NotAllowedError", "权限被拒绝"],
+  ["NotFoundError", "未找到可用的摄像头"],
+  ["NotReadableError", "可能正被其他应用占用"],
+])("摄像头错误 %s 提供可重试的原因", async (name, message) => {
+  getUserMedia.mockRejectedValue(new DOMException("camera", name))
+  const { result } = setup()
+  await act(async () => { await result.current.start() })
+  expect(result.current.status).toBe("error")
+  expect(result.current.error).toContain(message)
+  expect(createDetector).not.toHaveBeenCalled()
+})
+
+test("模型初始化失败会立即释放摄像头，重试可以成功", async () => {
+  const { stream, track } = camera()
+  getUserMedia.mockResolvedValue(stream)
+  createDetector.mockRejectedValueOnce(new Error("missing model"))
+  const { result, video } = setup()
+  await act(async () => { await result.current.start() })
+  expect(result.current.error).toContain("手势模型加载失败")
+  expect(track.stop).toHaveBeenCalledTimes(1)
+  expect(video.srcObject).toBeNull()
+  await act(async () => { await result.current.start() })
+  expect(result.current.status).toBe("running")
+  expect(result.current.error).toBeNull()
+})
+
+test.each(["ended", "pagehide", "unmount", "inference failure"])("%s 释放已运行的摄像头和模型", async (reason) => {
+  const { stream, track } = camera()
+  getUserMedia.mockResolvedValue(stream)
+  const { result, unmount, video } = setup()
+  await act(async () => { await result.current.start() })
+  act(() => {
+    if (reason === "ended") track.dispatchEvent(new Event("ended"))
+    else if (reason === "pagehide") window.dispatchEvent(new Event("pagehide"))
+    else if (reason === "unmount") unmount()
+    else {
+      detector.detectForVideo.mockImplementation(() => { throw new Error("wasm") })
+      frames.values().next().value!(100)
+    }
+  })
+  expect(track.stop).toHaveBeenCalledTimes(1)
+  expect(detector.close).toHaveBeenCalledTimes(1)
+  expect(video.srcObject).toBeNull()
+  expect(frames.size).toBe(0)
+})
+
+test("识别视频帧被限制在约 15fps，并把镜像左挥传给画廊", async () => {
+  const { stream } = camera()
+  getUserMedia.mockResolvedValue(stream)
+  const { result, video, onSwipe } = setup()
+  await act(async () => { await result.current.start() })
+  const sample = (time: number, rawX: number, changeFrame = true) => {
+    if (changeFrame) video.currentTime = time / 1000
+    detector.detectForVideo.mockReturnValue({
+      landmarks: [Array.from({ length: 21 }, () => ({ x: rawX, y: 0.5 }))],
+    })
+    const [id, callback] = frames.entries().next().value!
+    frames.delete(id)
+    act(() => callback(time))
+  }
+  sample(0, 0.5)
+  sample(10, 0.9)
+  sample(70, 0.5)
+  sample(140, 0.5)
+  sample(210, 0.5)
+  sample(280, 0.6)
+  sample(350, 0.75)
+  sample(420, 0.1, false)
+  expect(detector.detectForVideo).toHaveBeenCalledTimes(6)
+  expect(onSwipe).toHaveBeenCalledTimes(1)
+  expect(onSwipe).toHaveBeenCalledWith("left")
+})
