@@ -5,16 +5,22 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import type { KeyboardEvent } from "react"
 import { CARDS, SUIT_NAMES } from "@/data/cards"
 import { useHandSwipe } from "@/hooks/useHandSwipe"
-import type { SwipeDirection } from "@/lib/handSwipe"
+import type { SwipeDirection, SwipeGuide, SwipeMode } from "@/lib/handSwipe"
 import CardRing, { PIXELS_PER_CARD, wrapCardIndex } from "./CardRing"
 
 const SNAP_DURATION_MS = 240
-const gestureHints = {
+const gestureHints: Record<SwipeGuide, string> = {
   searching: "请举起一只手，让摄像头看到手掌",
   centering: "已看到手，请移到画面中间",
   settling: "手已居中，请稍停一下",
   ready: "已就绪　← 左挥看下一张　·　右挥看上一张 →",
   returning: "已翻牌，请回到挥手前的位置并停稳",
+  "repeat-pending-left": "已翻一张，继续向左移并停留可连翻",
+  "repeat-pending-right": "已翻一张，继续向右移并停留可连翻",
+  "holding-left": "保持在左侧即可连续看下一张",
+  "holding-right": "保持在右侧即可连续看上一张",
+  "repeating-left": "正在连续看下一张，手移回中间即可停止",
+  "repeating-right": "正在连续看上一张，手移回中间即可停止",
 }
 
 const WHEEL_IDLE_MS = 150
@@ -28,6 +34,7 @@ export default function CardGallery() {
   const frameRef = useRef<number | null>(null)
   const wheelTimerRef = useRef<number | null>(null)
   const [mode, setMode] = useState<"ring" | "detail">("ring")
+  const [swipeMode, setSwipeMode] = useState<SwipeMode>("single")
   const [position, setPosition] = useState(0)
   const currentIndex = wrapCardIndex(Math.round(position))
   const currentCard = CARDS[currentIndex]
@@ -98,7 +105,7 @@ export default function CardGallery() {
   const onSwipe = useCallback((direction: SwipeDirection) => {
     step(direction === "left" ? 1 : -1)
   }, [step])
-  const { videoRef, status: gestureStatus, guide, error: gestureError, start, stop } = useHandSwipe(onSwipe)
+  const { videoRef, status: gestureStatus, guide, error: gestureError, start, stop } = useHandSwipe(onSwipe, swipeMode)
   const gestureEnabled = gestureStatus === "starting" || gestureStatus === "running"
 
   useEffect(() => {
@@ -129,6 +136,8 @@ export default function CardGallery() {
 
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.altKey || event.ctrlKey || event.metaKey) return
+    // Let native radio arrow keys select the gesture mode without changing cards.
+    if (event.target instanceof HTMLInputElement && event.target.type === "radio") return
 
     switch (event.key) {
       case "ArrowLeft":
@@ -236,16 +245,33 @@ export default function CardGallery() {
             </button>
           </div>
           <div className="gallery-gesture">
-            <button
-              type="button"
-              className="gallery-gesture-toggle"
-              aria-pressed={gestureEnabled}
-              aria-describedby="gesture-hint"
-              onClick={() => { if (gestureEnabled) stop(); else void start() }}
-            >
-              <span className="gesture-indicator" aria-hidden="true" />
-              {gestureStatus === "starting" ? "取消开启手势" : gestureEnabled ? "关闭手势翻页" : "开启手势翻页"}
-            </button>
+            <div className="gallery-gesture-controls">
+              <button
+                type="button"
+                className="gallery-gesture-toggle"
+                aria-pressed={gestureEnabled}
+                aria-describedby="gesture-hint"
+                onClick={() => { if (gestureEnabled) stop(); else void start() }}
+              >
+                <span className="gesture-indicator" aria-hidden="true" />
+                {gestureStatus === "starting" ? "取消开启手势" : gestureEnabled ? "关闭手势翻页" : "开启手势翻页"}
+              </button>
+              <fieldset className="gesture-modes" role="radiogroup">
+                <legend className="sr-only">手势翻页方式</legend>
+                {([{ value: "single", label: "单次翻页" }, { value: "repeat", label: "停留连翻" }] as const).map((option) => (
+                  <label key={option.value} className="gesture-mode-option">
+                    <input
+                      type="radio"
+                      name="gesture-swipe-mode"
+                      value={option.value}
+                      checked={swipeMode === option.value}
+                      onChange={() => setSwipeMode(option.value)}
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </fieldset>
+            </div>
           </div>
         </div>
         <p id="gallery-hint" className="gallery-hint">

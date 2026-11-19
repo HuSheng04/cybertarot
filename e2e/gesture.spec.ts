@@ -23,6 +23,12 @@ test.describe("电脑端摄像头手势", () => {
     })
     await page.goto("/")
     await expect(page.getByRole("button", { name: "开启手势翻页" })).toBeVisible()
+    await expect(page.getByRole("radiogroup", { name: "手势翻页方式" })).toBeVisible()
+    await expect(page.getByRole("radio", { name: "单次翻页" })).toBeChecked()
+    await page.getByRole("radio", { name: "单次翻页" }).focus()
+    await page.keyboard.press("ArrowRight")
+    await expect(page.getByRole("radio", { name: "停留连翻" })).toBeChecked()
+    await expect(page.getByRole("status")).toContainText("1 / 78")
     expect(assets).toEqual([])
     expect(await page.locator("video").evaluate((video) => video.srcObject)).toBeNull()
     await page.getByRole("button", { name: "开启手势翻页" }).click()
@@ -40,9 +46,15 @@ test.describe("电脑端摄像头手势", () => {
       const stream = video.srcObject as MediaStream
       ;(window as unknown as { cameraTracks: MediaStreamTrack[] }).cameraTracks = stream.getTracks()
     })
+    await page.getByRole("radio", { name: "单次翻页" }).check()
+    await page.getByRole("radio", { name: "停留连翻" }).check()
+    await expect(page.getByRole("button", { name: "关闭手势翻页" })).toBeVisible()
+    expect(assets.filter((url) => url.endsWith("hand_landmarker.task"))).toHaveLength(1)
     await page.getByRole("button", { name: "查看大图", exact: true }).click()
     await expect(page.getByRole("img", { name: "愚人 / The Fool" })).toBeVisible()
+    await expect(page.getByRole("radio", { name: "停留连翻" })).toBeChecked()
     await page.getByRole("button", { name: "返回牌环" }).click()
+    await expect(page.getByRole("radio", { name: "停留连翻" })).toBeChecked()
     expect(await page.locator("video").evaluate((video) => {
       const { cameraTracks } = window as unknown as { cameraTracks: MediaStreamTrack[] }
       return (video.srcObject as MediaStream).getTracks().every((track) => (
@@ -76,4 +88,5 @@ test("手机端不显示手势开关", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "只检查手机布局")
   await page.goto("/")
   await expect(page.getByRole("button", { name: "开启手势翻页" })).toBeHidden()
+  await expect(page.getByRole("radiogroup", { name: "手势翻页方式" })).toBeHidden()
 })

@@ -1,5 +1,8 @@
 export type SwipeDirection = "left" | "right"
+export type SwipeMode = "single" | "repeat"
 export type SwipeGuide = "searching" | "centering" | "settling" | "ready" | "returning"
+  | "repeat-pending-left" | "repeat-pending-right"
+  | "holding-left" | "holding-right" | "repeating-left" | "repeating-right"
 type Point = { x: number; y: number }
 type Sample = Point & { time: number }
 
@@ -8,6 +11,21 @@ const CENTER_SETTLE_MS = 100
 const RETURN_SETTLE_MS = 180
 const RETURN_CENTER_RADIUS = 0.06
 const TRACKING_GRACE_MS = 150
+const REPEAT_HOLD_MS = 450
+const REPEAT_INTERVAL_MS = 650
+const SIDE_ENTER_DISTANCE = 0.25
+const SIDE_EXIT_DISTANCE = 0.22
+const POSITION_EPSILON = 1e-6
+
+/** One outward axis for both hands: positive always means moving in the swipe direction. */
+function outwardDistance(x: number, origin: number, direction: SwipeDirection) {
+  return (x - origin) * (direction === "right" ? 1 : -1)
+}
+
+function inSide(x: number, direction: SwipeDirection, holding = false) {
+  const threshold = holding ? SIDE_EXIT_DISTANCE : SIDE_ENTER_DISTANCE
+  return outwardDistance(x, 0.5, direction) + POSITION_EPSILON >= threshold
+}
 
 /** Raw camera frames are unmirrored; convert once to the user's mirror view. */
 export function getMirroredPalm(landmarks: Point[] | undefined): Point | null {
@@ -24,13 +42,32 @@ export class HandSwipeTracker {
   private samples: Sample[] = []
   private centerSamples: Sample[] = []
   private returnCenterX: number | null = null
+  private repeatDirection: SwipeDirection | null = null
+  private repeatDueAt: number | null = null
   guide: SwipeGuide = "searching"
   private lastTime: number | null = null
+
+  constructor(private mode: SwipeMode = "single") {}
+
+  setMode(mode: SwipeMode) {
+    if (mode === this.mode) return
+    this.mode = mode
+    this.reset()
+  }
+
+  private cancelRepeat() {
+    if (this.repeatDirection === null) return
+    this.repeatDirection = null
+    this.repeatDueAt = null
+    this.guide = "returning"
+  }
 
   reset() {
     this.samples = []
     this.centerSamples = []
     this.returnCenterX = null
+    this.repeatDirection = null
+    this.repeatDueAt = null
     this.guide = "searching"
     this.lastTime = null
   }
@@ -49,6 +86,7 @@ export class HandSwipeTracker {
       if (returnCenterX !== null) this.guide = "returning"
     }
     if (!palm) {
+      this.cancelRepeat()
       // Allow a brief dropout without re-arming an already locked gesture.
       // Never join motion or center-settling samples across a tracking gap.
       this.samples = []
@@ -58,11 +96,39 @@ export class HandSwipeTracker {
     this.lastTime = time
     const sample = { ...palm, time }
 
+    if (this.repeatDirection !== null) {
+      const direction = this.repeatDirection
+      // Once entered, allow a 3% inward wobble instead of cancelling at the same edge.
+      if (inSide(palm.x, direction, this.repeatDueAt !== null)) {
+        this.centerSamples = []
+        if (this.repeatDueAt === null) {
+          this.repeatDueAt = time + REPEAT_HOLD_MS
+          this.guide = `holding-${direction}`
+        } else if (time >= this.repeatDueAt) {
+          // Emit once per fresh frame; never catch up missed repeat intervals.
+          this.repeatDueAt = time + REPEAT_INTERVAL_MS
+          this.guide = `repeating-${direction}`
+          return direction
+        }
+        return null
+      }
+
+      // A fast return can cross the entire neutral zone between sampled frames.
+      const returnedToStart = this.returnCenterX !== null
+        && outwardDistance(palm.x, this.returnCenterX, direction) <= RETURN_CENTER_RADIUS + POSITION_EPSILON
+      if (this.repeatDueAt !== null || returnedToStart) this.cancelRepeat()
+      else {
+        // A short swipe may need more outward motion to reach the side zone.
+        this.guide = `repeat-pending-${direction}`
+        return null
+      }
+    }
+
     if (this.guide !== "ready") {
       const returning = this.returnCenterX !== null
       const inCenter = this.returnCenterX !== null
-        ? Math.abs(palm.x - this.returnCenterX) <= RETURN_CENTER_RADIUS
-        : palm.x >= 0.25 && palm.x <= 0.75
+        ? Math.abs(palm.x - this.returnCenterX) <= RETURN_CENTER_RADIUS + POSITION_EPSILON
+        : Math.abs(palm.x - 0.5) <= 0.25 + POSITION_EPSILON
       if (!inCenter) {
         this.guide = returning ? "returning" : "centering"
         this.centerSamples = []
@@ -94,13 +160,24 @@ export class HandSwipeTracker {
     if (this.samples.length < 3) return null
     const dx = palm.x - this.samples[0].x
     const dy = palm.y - this.samples[0].y
-    if (Math.abs(dx) > 0.14 && Math.abs(dx) * width >= 1.5 * Math.abs(dy) * height) {
+    if (Math.abs(dx) > 0.14 + POSITION_EPSILON
+      && Math.abs(dx) * width + POSITION_EPSILON >= 1.5 * Math.abs(dy) * height) {
       const returnCenterX = this.samples[0].x
       this.reset()
       this.returnCenterX = returnCenterX
       this.guide = "returning"
       this.lastTime = time
-      return dx < 0 ? "left" : "right"
+      const direction = dx < 0 ? "left" : "right"
+      if (this.mode === "repeat") {
+        this.repeatDirection = direction
+        if (inSide(palm.x, direction)) {
+          this.repeatDueAt = time + REPEAT_HOLD_MS
+          this.guide = `holding-${direction}`
+        } else {
+          this.guide = `repeat-pending-${direction}`
+        }
+      }
+      return direction
     }
     return null
   }

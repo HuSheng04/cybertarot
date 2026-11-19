@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react"
 import { useHandSwipe } from "@/hooks/useHandSwipe"
+import type { SwipeDirection, SwipeMode } from "@/lib/handSwipe"
 
 const createDetector = jest.fn()
 const resolveFiles = jest.fn()
@@ -31,6 +32,7 @@ beforeEach(() => {
   frameId = 0
   Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia } })
   Object.defineProperty(window, "isSecureContext", { configurable: true, value: true })
+  Object.defineProperty(document, "hidden", { configurable: true, value: false })
   jest.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue()
   jest.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {})
   jest.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
@@ -45,14 +47,39 @@ beforeEach(() => {
 
 afterEach(() => { jest.restoreAllMocks() })
 
-function setup(onSwipe = jest.fn()) {
-  const hook = renderHook(() => useHandSwipe(onSwipe))
+function setup(onSwipe = jest.fn(), swipeMode: SwipeMode = "single") {
+  const hook = renderHook(({ mode }) => useHandSwipe(onSwipe, mode), { initialProps: { mode: swipeMode } })
   const video = document.createElement("video")
   Object.defineProperty(video, "readyState", { value: 2 })
   Object.defineProperty(video, "videoWidth", { value: 640 })
   Object.defineProperty(video, "videoHeight", { value: 480 })
   hook.result.current.videoRef.current = video
   return { ...hook, video, onSwipe }
+}
+
+function sampleFrame(video: HTMLVideoElement, time: number, mirrorX: number | null, fresh = true) {
+  if (fresh) video.currentTime = time / 1000
+  detector.detectForVideo.mockReturnValue({
+    landmarks: mirrorX === null ? [] : [Array.from({ length: 21 }, () => ({ x: 1 - mirrorX, y: 0.5 }))],
+  })
+  const [id, callback] = frames.entries().next().value!
+  frames.delete(id)
+  act(() => callback(time))
+}
+
+async function startRepeat(direction: SwipeDirection = "left") {
+  const { stream, track } = camera()
+  getUserMedia.mockResolvedValue(stream)
+  const hook = setup(jest.fn(), "repeat")
+  await act(async () => { await hook.result.current.start() })
+  const mirror = (x: number) => direction === "left" ? x : 1 - x
+  for (const [time, x] of [[0, 0.5], [70, 0.5], [140, 0.5], [210, 0.4], [280, 0.25]]) {
+    sampleFrame(hook.video, time, mirror(x))
+  }
+  expect(hook.onSwipe).toHaveBeenCalledTimes(1)
+  expect(hook.result.current.guide).toBe(`holding-${direction}`)
+  for (const time of [350, 420, 490, 560, 630, 700]) sampleFrame(hook.video, time, mirror(0.25))
+  return { ...hook, stream, track }
 }
 
 test("只在主动开启后请求摄像头；关闭会取消循环并释放全部资源", async () => {
@@ -184,4 +211,90 @@ test("识别视频帧被限制在约 15fps，并把镜像左挥传给画廊", as
   expect(detector.detectForVideo).toHaveBeenCalledTimes(6)
   expect(onSwipe).toHaveBeenCalledTimes(1)
   expect(onSwipe).toHaveBeenCalledWith("left")
+})
+
+test.each(["left", "right"] as const)("%s 连翻由新视频帧推进，侧边回摆时保持一致", async (direction) => {
+  const { video, result, onSwipe } = await startRepeat(direction)
+  const mirror = (x: number) => direction === "left" ? x : 1 - x
+  sampleFrame(video, 770, mirror(0.27))
+  expect(onSwipe).toHaveBeenCalledTimes(2)
+  expect(result.current.guide).toBe(`repeating-${direction}`)
+  for (const time of [840, 910, 980, 1050, 1120, 1190, 1260, 1330, 1400]) sampleFrame(video, time, mirror(0.27))
+  expect(onSwipe).toHaveBeenCalledTimes(2)
+  sampleFrame(video, 1470, mirror(0.27))
+  expect(onSwipe).toHaveBeenCalledTimes(3)
+  expect(onSwipe.mock.calls).toEqual([[direction], [direction], [direction]])
+  for (const time of [1540, 1610, 1680, 1750]) sampleFrame(video, time, 0.5)
+  expect(result.current.guide).toBe("ready")
+  sampleFrame(video, 1820, mirror(0.4))
+  sampleFrame(video, 1890, mirror(0.24))
+  expect(onSwipe).toHaveBeenCalledTimes(4)
+  for (const time of [1960, 2030, 2100, 2170, 2240, 2310, 2380]) sampleFrame(video, time, mirror(0.27))
+  expect(onSwipe).toHaveBeenCalledTimes(5)
+})
+
+test.each(["收手", "丢手", "视频停帧"])("%s 会取消连翻，恢复后不会补翻或反向误触", async (reason) => {
+  const { video, onSwipe } = await startRepeat()
+  if (reason === "视频停帧") {
+    sampleFrame(video, 770, 0.25, false)
+    sampleFrame(video, 840, 0.25, false)
+    expect(onSwipe).toHaveBeenCalledTimes(1)
+    sampleFrame(video, 910, 0.25)
+  } else {
+    sampleFrame(video, 770, reason === "丢手" ? null : 0.5)
+    sampleFrame(video, 840, 0.25)
+    sampleFrame(video, 910, 0.8)
+  }
+  for (const time of [980, 1050, 1120, 1190, 1260, 1330, 1400, 1470]) sampleFrame(video, time, 0.25)
+  expect(onSwipe).toHaveBeenCalledTimes(1)
+})
+
+test("页面隐藏即清除连翻，不依赖后台动画帧；恢复后重新居中", async () => {
+  const { video, result, onSwipe, track } = await startRepeat()
+  Object.defineProperty(document, "hidden", { value: true })
+  act(() => document.dispatchEvent(new Event("visibilitychange")))
+  expect(result.current.guide).toBe("searching")
+  Object.defineProperty(document, "hidden", { value: false })
+  act(() => document.dispatchEvent(new Event("visibilitychange")))
+  for (const time of [5000, 5070, 5140, 5210, 5280]) sampleFrame(video, time, 0.2)
+  expect(onSwipe).toHaveBeenCalledTimes(1)
+  expect(track.stop).not.toHaveBeenCalled()
+  for (const time of [5350, 5420, 5490]) sampleFrame(video, time, 0.5)
+  expect(result.current.guide).toBe("ready")
+  sampleFrame(video, 5560, 0.4)
+  sampleFrame(video, 5630, 0.25)
+  expect(onSwipe).toHaveBeenCalledTimes(2)
+})
+
+test("运行中切换手势模式清空轨迹和计时，复用当前摄像头", async () => {
+  const { video, result, onSwipe, rerender, stream, track } = await startRepeat()
+  act(() => rerender({ mode: "single" }))
+  sampleFrame(video, 770, 0.2)
+  expect(result.current.guide).toBe("centering")
+  act(() => rerender({ mode: "repeat" }))
+  for (const time of [840, 910, 980, 1050, 1120, 1190, 1260, 1330, 1400]) sampleFrame(video, time, 0.2)
+  expect(onSwipe).toHaveBeenCalledTimes(1)
+  for (const time of [1470, 1540, 1610]) sampleFrame(video, time, 0.5)
+  expect(result.current.guide).toBe("ready")
+  sampleFrame(video, 1680, 0.4)
+  sampleFrame(video, 1750, 0.25)
+  expect(onSwipe).toHaveBeenCalledTimes(2)
+  expect(video.srcObject).toBe(stream)
+  expect(getUserMedia).toHaveBeenCalledTimes(1)
+  expect(createDetector).toHaveBeenCalledTimes(1)
+  expect(track.stop).not.toHaveBeenCalled()
+})
+
+test.each(["stop", "ended", "unmount"])("连翻待触发时 %s 会取消帧循环并释放资源", async (reason) => {
+  const { result, unmount, video, onSwipe, track } = await startRepeat()
+  act(() => {
+    if (reason === "unmount") unmount()
+    else if (reason === "ended") track.dispatchEvent(new Event("ended"))
+    else result.current.stop()
+  })
+  expect(frames.size).toBe(0)
+  expect(onSwipe).toHaveBeenCalledTimes(1)
+  expect(track.stop).toHaveBeenCalledTimes(1)
+  expect(detector.close).toHaveBeenCalledTimes(1)
+  expect(video.srcObject).toBeNull()
 })

@@ -16,9 +16,7 @@ html {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(ellipse at 50% 40%, rgb(34 43 67 / 40%), transparent 65%),
-    #0a0a1a;
+  background: #0a0a1a url("/assets/main_background.png") center / cover no-repeat;
   color: var(--color-text-primary);
   font-family: var(--font-body);
 }
@@ -199,6 +197,7 @@ body {
 
 .gallery-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 20px;
@@ -213,6 +212,47 @@ body {
 
 .gallery-gesture {
   display: none;
+}
+
+.gallery-gesture-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.gesture-modes {
+  display: flex;
+  gap: 2px;
+  min-width: 0;
+  padding: 3px;
+  border: 1px solid #31404e;
+  border-radius: 8px;
+}
+
+.gesture-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  color: #a5a5bd;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gesture-mode-option:has(input:checked) {
+  color: #b8f8fc;
+  background: rgb(0 240 255 / 9%);
+}
+
+.gesture-mode-option input {
+  width: 13px;
+  height: 13px;
+  accent-color: #00f0ff;
 }
 
 .gallery-gesture-toggle {

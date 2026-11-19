@@ -123,6 +123,55 @@ describe("首页卡片画廊", () => {
       jest.useRealTimers()
     }
   })
+
+  test("默认单次翻页，手势模式在牌环和大图之间保持独立选择", () => {
+    const { confirm, viewport } = setupGallery()
+    const modes = screen.getByRole("radiogroup", { name: "手势翻页方式" })
+    expect(modes).toBeInTheDocument()
+    const single = screen.getByRole("radio", { name: "单次翻页" })
+    const repeat = screen.getByRole("radio", { name: "停留连翻" })
+    expect(single).toBeChecked()
+    expect(repeat).not.toBeChecked()
+    fireEvent.click(repeat)
+    expect(repeat).toBeChecked()
+    expect(handSwipe.useHandSwipe).toHaveBeenLastCalledWith(expect.any(Function), "repeat")
+    fireEvent.click(confirm)
+    expect(repeat).toBeChecked()
+    fireEvent.click(screen.getByRole("button", { name: "返回牌环" }))
+    expect(repeat).toBeChecked()
+    fireEvent.keyDown(repeat, { key: "ArrowLeft" })
+    expect(screen.getByRole("status")).toHaveTextContent("1 / 78")
+    fireEvent.click(single)
+    expect(handSwipe.useHandSwipe).toHaveBeenLastCalledWith(expect.any(Function), "single")
+    fireEvent.keyDown(viewport, { key: "ArrowRight" })
+    expect(screen.getByRole("status")).toHaveTextContent("2 / 78")
+  })
+
+  test("连续的识别事件在牌环和大图中仍共用同一套选牌逻辑", () => {
+    let swipe!: (direction: SwipeDirection) => void
+    const mock = jest.mocked(handSwipe.useHandSwipe).mockImplementation((callback) => {
+      swipe = callback
+      return {
+        videoRef: { current: null }, status: "running", guide: "repeating-left", error: null,
+        start: jest.fn(), stop: jest.fn(),
+      }
+    })
+    try {
+      const { confirm } = setupGallery()
+      fireEvent.click(screen.getByRole("radio", { name: "停留连翻" }))
+      expect(screen.getByText("正在连续看下一张，手移回中间即可停止")).toBeVisible()
+      act(() => { swipe("left"); swipe("left") })
+      expect(screen.getByRole("status")).toHaveTextContent("3 / 78")
+      fireEvent.click(confirm)
+      act(() => swipe("left"))
+      expect(screen.getByRole("status")).toHaveTextContent("4 / 78")
+      act(() => swipe("right"))
+      expect(screen.getByRole("status")).toHaveTextContent("3 / 78")
+      expect(screen.getByRole("img", { name: "女祭司 / The High Priestess" })).toBeVisible()
+    } finally {
+      mock.mockImplementation(jest.requireActual("@/hooks/useHandSwipe").useHandSwipe)
+    }
+  })
 })
 
 describe("旧入口跳转", () => {

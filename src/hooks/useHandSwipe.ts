@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { HandLandmarker } from "@mediapipe/tasks-vision"
 import { getMirroredPalm, HandSwipeTracker } from "@/lib/handSwipe"
-import type { SwipeDirection, SwipeGuide } from "@/lib/handSwipe"
+import type { SwipeDirection, SwipeGuide, SwipeMode } from "@/lib/handSwipe"
 
 type Status = "idle" | "starting" | "running" | "error"
 type Session = {
@@ -12,6 +12,7 @@ type Session = {
   detector: HandLandmarker | null
   frame: number | null
   removeListeners: () => void
+  tracker: HandSwipeTracker
 }
 
 function release(session: Session) {
@@ -43,15 +44,20 @@ function cameraError(error: unknown) {
   }
 }
 
-export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void) {
+export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void, swipeMode: SwipeMode = "single") {
   const videoRef = useRef<HTMLVideoElement>(null)
   const sessionRef = useRef<Session | null>(null)
   const onSwipeRef = useRef(onSwipe)
+  const swipeModeRef = useRef(swipeMode)
   const [status, setStatus] = useState<Status>("idle")
   const [guide, setGuide] = useState<SwipeGuide>("searching")
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => { onSwipeRef.current = onSwipe }, [onSwipe])
+  useEffect(() => {
+    swipeModeRef.current = swipeMode
+    sessionRef.current?.tracker.setMode(swipeMode)
+  }, [swipeMode])
 
   const cleanup = useCallback(() => {
     const session = sessionRef.current
@@ -79,11 +85,20 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void) {
     if (!video) return
     const session: Session = {
       video, stream: null, detector: null, frame: null, removeListeners: () => {},
+      tracker: new HandSwipeTracker(swipeModeRef.current),
     }
     sessionRef.current = session
     setGuide("searching")
     setStatus("starting")
     const isCurrent = () => sessionRef.current === session
+    const tracker = session.tracker
+    let publishedGuide: SwipeGuide = "searching"
+    const publishGuide = () => {
+      if (isCurrent() && publishedGuide !== tracker.guide) {
+        publishedGuide = tracker.guide
+        setGuide(tracker.guide)
+      }
+    }
     const fail = (message: string) => {
       if (!isCurrent()) return
       cleanup()
@@ -91,8 +106,17 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void) {
       setStatus("error")
     }
     const onPageHide = () => stop()
+    const onVisibilityChange = () => {
+      if (!document.hidden) return
+      tracker.reset()
+      publishGuide()
+    }
     window.addEventListener("pagehide", onPageHide)
-    session.removeListeners = () => window.removeEventListener("pagehide", onPageHide)
+    document.addEventListener("visibilitychange", onVisibilityChange)
+    session.removeListeners = () => {
+      window.removeEventListener("pagehide", onPageHide)
+      document.removeEventListener("visibilitychange", onVisibilityChange)
+    }
     let stage: "camera" | "model" = "camera"
 
     try {
@@ -108,9 +132,10 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void) {
       session.stream = stream
       const onEnded = () => fail("摄像头连接已中断，请检查设备后重新开启。")
       stream.getVideoTracks().forEach((track) => track.addEventListener("ended", onEnded))
+      const removeSessionListeners = session.removeListeners
       session.removeListeners = () => {
         stream.getVideoTracks().forEach((track) => track.removeEventListener("ended", onEnded))
-        window.removeEventListener("pagehide", onPageHide)
+        removeSessionListeners()
       }
       video.srcObject = stream
       await video.play()
@@ -132,13 +157,11 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void) {
       }
       session.detector = detector
       setStatus("running")
-      const tracker = new HandSwipeTracker()
       let lastSample = -Infinity
       let lastVideoTime = -1
       const detect = (now: number) => {
         if (!isCurrent()) return
         try {
-          const previousGuide = tracker.guide
           if (document.hidden) tracker.reset()
           else if (now - lastSample >= 1000 / 15 && video.readyState >= 2
             && video.currentTime !== lastVideoTime) {
@@ -150,7 +173,7 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void) {
             )
             if (direction) onSwipeRef.current(direction)
           }
-          if (previousGuide !== tracker.guide) setGuide(tracker.guide)
+          publishGuide()
           if (isCurrent()) session.frame = requestAnimationFrame(detect)
         } catch {
           fail("手势识别运行失败，请重新开启；仍可使用按钮或方向键翻页。")
