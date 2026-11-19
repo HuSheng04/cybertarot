@@ -65,18 +65,8 @@ body {
 }
 
 .gallery-viewport {
-  display: flex;
   min-width: 0;
   min-height: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-}
-
-.gallery-viewport::-webkit-scrollbar {
-  display: none;
 }
 
 .gallery-viewport:focus-visible {
@@ -84,7 +74,6 @@ body {
 }
 
 .gallery-slide {
-  flex: 0 0 100%;
   min-width: 0;
   height: 100%;
   margin: 0;
@@ -93,8 +82,66 @@ body {
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 20px;
   justify-items: center;
-  scroll-snap-align: center;
-  scroll-snap-stop: always;
+}
+
+.card-ring {
+  --ring-card-width: min(164px, 16cqw, 34cqh);
+  --ring-radius-x: calc(50cqw - var(--ring-card-width) * 0.55 - 5px);
+  --ring-radius-y: min(27cqh, calc(50cqh - var(--ring-card-width) * 0.71 - 8px));
+
+  position: relative;
+  isolation: isolate;
+  container-type: size;
+  width: min(100%, 1040px);
+  height: 100%;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+  cursor: grab;
+}
+
+.card-ring:active {
+  cursor: grabbing;
+}
+
+.card-ring-track {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--ring-radius-x) * 2);
+  height: calc(var(--ring-radius-y) * 2);
+  transform: translate(-50%, -50%);
+  border: 1px solid rgb(112 189 213 / 30%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgb(122 143 210 / 11%), transparent 75%);
+  box-shadow: 0 0 36px rgb(0 240 255 / 6%), inset 0 0 24px rgb(0 240 255 / 5%);
+  pointer-events: none;
+}
+
+.card-ring-thumbnail {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--ring-card-width);
+  aspect-ratio: 497 / 700;
+  transform: translate(-50%, -50%)
+    translate(calc(var(--ring-x) * var(--ring-radius-x)), calc(var(--ring-y) * var(--ring-radius-y)))
+    scale(var(--ring-scale));
+  border-radius: 7px;
+  background: #15192c;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 48%);
+  cursor: pointer;
+}
+
+.card-ring-thumbnail[aria-current] {
+  outline: 1px solid #62eff8;
+  outline-offset: 3px;
+  box-shadow: 0 0 25px rgb(0 240 255 / 23%), 0 10px 28px rgb(0 0 0 / 55%);
+}
+
+.card-ring-image {
+  border-radius: inherit;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .gallery-artwork {
@@ -145,9 +192,9 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 28px;
-  width: min(100%, 420px);
-  margin-inline: auto;
+  flex: 1;
+  gap: 16px;
+  min-width: 0;
 }
 
 .gallery-actions {
@@ -157,8 +204,11 @@ body {
   gap: 20px;
 }
 
-.gallery-actions .gallery-controls {
-  margin-inline: 0;
+.gallery-main-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: min(100%, 480px);
 }
 
 .gallery-gesture {
@@ -206,6 +256,11 @@ body {
   text-align: center;
 }
 
+.gallery-gesture-help [data-ready="true"] {
+  color: var(--color-neon-cyan);
+  font-weight: 600;
+}
+
 .gallery-gesture-error {
   margin-top: 4px;
   color: #ffb7a4;
@@ -226,7 +281,7 @@ body {
   }
 }
 
-.gallery-controls button {
+.gallery-main-controls button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -242,20 +297,23 @@ body {
   transition: border-color 180ms, background-color 180ms;
 }
 
+.gallery-main-controls .gallery-mode-button {
+  flex-shrink: 0;
+  padding-inline: 20px;
+  border-color: #287985;
+  background: rgb(0 240 255 / 9%);
+  color: #b8f8fc;
+}
+
 @media (hover: hover) {
-  .gallery-controls button:hover:not(:disabled) {
+  .gallery-main-controls button:hover {
     border-color: #00f0ff;
-    background: rgb(0 240 255 / 6%);
+    background: rgb(0 240 255 / 13%);
   }
 }
 
-.gallery-controls button:active:not(:disabled) {
-  background: rgb(0 240 255 / 12%);
-}
-
-.gallery-controls button:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+.gallery-main-controls button:active {
+  background: rgb(0 240 255 / 18%);
 }
 
 .gallery-position {
@@ -288,6 +346,12 @@ body {
   color: #00f0ff;
 }
 
+@media (max-width: 767px) {
+  .card-ring {
+    --ring-card-width: min(120px, 30cqw, 34cqh);
+  }
+}
+
 @media (max-width: 640px) {
   .gallery-header {
     padding: 18px 20px 12px;
@@ -309,13 +373,31 @@ body {
     padding: 16px 20px 14px;
   }
 
-  .gallery-controls {
+  .gallery-controls, .gallery-main-controls {
     gap: 12px;
   }
 
   .gallery-controls button {
     gap: 8px;
     padding-inline: 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  .gallery-controls, .gallery-main-controls {
+    gap: 8px;
+  }
+
+  .gallery-position {
+    min-width: 54px;
+  }
+
+  .gallery-main-controls .gallery-mode-button {
+    padding-inline: 12px;
+  }
+
+  .gallery-arrow {
+    display: none;
   }
 }
 

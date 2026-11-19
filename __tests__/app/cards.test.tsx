@@ -17,138 +17,110 @@ jest.mock("next/navigation", () => ({
 
 import { redirect } from "next/navigation"
 
-const scrollToMock = jest.fn()
-let resizeCallback: ResizeObserverCallback
-const disconnectMock = jest.fn()
+const reducedMotionQuery = "(prefers-reduced-motion: reduce)"
+let reducedMotion: boolean
 
 beforeEach(() => {
   jest.clearAllMocks()
+  reducedMotion = true
   Object.defineProperty(window, "matchMedia", {
     writable: true,
-    value: jest.fn(() => ({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() })),
-  })
-  HTMLElement.prototype.scrollTo = scrollToMock
-  global.ResizeObserver = jest.fn().mockImplementation((callback: ResizeObserverCallback) => {
-    resizeCallback = callback
-    return { observe: jest.fn(), disconnect: disconnectMock }
+    value: jest.fn((query: string) => ({
+      matches: query === reducedMotionQuery && reducedMotion,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    })),
   })
 })
 
 function setupGallery() {
-  const result = render(<HomePage />)
-  const viewport = screen.getByRole("region", { name: "塔罗牌画廊" })
-  Object.defineProperty(viewport, "clientWidth", { configurable: true, value: 390 })
-  const scrollToIndex = (index: number) => {
-    fireEvent.scroll(viewport, { target: { scrollLeft: index * 390 } })
+  render(<HomePage />)
+  return {
+    viewport: screen.getByRole("region", { name: "塔罗牌画廊" }),
+    previous: screen.getByRole("button", { name: /上一张/ }),
+    next: screen.getByRole("button", { name: /下一张/ }),
+    confirm: screen.getByRole("button", { name: "查看大图" }),
   }
-  return { ...result, viewport, scrollToIndex }
 }
 
 describe("首页卡片画廊", () => {
-  test("无需登录即可看到愚人和 1 / 78，首张禁用上一张", () => {
-    setupGallery()
+  test("初始显示愚人及桌面牌环，首尾可循环", () => {
+    const { viewport, previous, next } = setupGallery()
+    const front = screen.getByRole("button", { name: "查看大图：愚人 / The Fool" })
+    expect(front).toHaveAttribute("aria-current", "true")
+    expect(front.querySelector("img")).toHaveAttribute("src", expect.stringContaining("major_00.webp"))
+    expect(viewport.querySelectorAll("img")).toHaveLength(9)
     expect(screen.getByRole("heading", { name: "愚人" })).toBeVisible()
-    expect(screen.getByRole("img", { name: "愚人 / The Fool" })).toHaveAttribute(
-      "src", expect.stringContaining("major_00.webp"),
-    )
     expect(screen.getByRole("status")).toHaveTextContent("1 / 78")
-    expect(screen.getByRole("button", { name: /上一张/ })).toBeDisabled()
-    expect(screen.getByRole("button", { name: /下一张/ })).toBeEnabled()
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
-  })
 
-  test("全部牌面遵循数据顺序，只有首张优先加载", () => {
-    const { viewport } = setupGallery()
-    const images = viewport.querySelectorAll("img")
-    expect(images).toHaveLength(CARDS.length)
-    images.forEach((image, index) => {
-      expect(image).toHaveAttribute("alt", `${CARDS[index].nameZh} / ${CARDS[index].nameEn}`)
-      expect(image).toHaveAttribute("src", expect.stringContaining(`${CARDS[index].id}.webp`))
-      if (index > 0) expect(image).toHaveAttribute("loading", "lazy")
-    })
-    expect(images[0]).not.toHaveAttribute("loading", "lazy")
-  })
-
-  test("按钮只发起滚动，实际滚动后才同步牌名、页码和边界", () => {
-    const { scrollToIndex } = setupGallery()
-    fireEvent.click(screen.getByRole("button", { name: /下一张/ }))
-    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 390, behavior: "smooth" })
-    expect(screen.getByRole("status")).toHaveTextContent("1 / 78")
-
-    scrollToIndex(1)
-    expect(screen.getByRole("heading", { name: "魔术师" })).toBeVisible()
-    expect(screen.getByRole("status")).toHaveTextContent("2 / 78")
-    fireEvent.click(screen.getByRole("button", { name: /上一张/ }))
-    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 0, behavior: "smooth" })
-
-    scrollToIndex(CARDS.length - 1)
+    fireEvent.click(previous)
     expect(screen.getByRole("status")).toHaveTextContent("78 / 78")
-    expect(screen.getByRole("heading", { name: CARDS.at(-1)!.nameZh })).toBeVisible()
-    expect(screen.getByRole("button", { name: /下一张/ })).toBeDisabled()
-    expect(screen.getByRole("button", { name: /上一张/ })).toBeEnabled()
-
-    scrollToIndex(0)
-    expect(screen.getByRole("button", { name: /上一张/ })).toBeDisabled()
+    fireEvent.click(next)
+    expect(screen.getByRole("status")).toHaveTextContent("1 / 78")
   })
 
-  test("手动滑动后，按钮从当前牌继续翻页", () => {
-    const { scrollToIndex } = setupGallery()
-    scrollToIndex(23)
-    expect(screen.getByRole("status")).toHaveTextContent("24 / 78")
-    expect(screen.getByRole("heading", { name: CARDS[23].nameZh })).toBeVisible()
-    fireEvent.click(screen.getByRole("button", { name: /下一张/ }))
-    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 24 * 390, behavior: "smooth" })
-  })
-
-  test("窗口宽度变化后，保持当前牌居中并清理监听", () => {
-    const { viewport, scrollToIndex, unmount } = setupGallery()
-    scrollToIndex(15)
-    Object.defineProperty(viewport, "clientWidth", { value: 844 })
-    resizeCallback([], {} as ResizeObserver)
-    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 15 * 844, behavior: "auto" })
-    expect(screen.getByRole("status")).toHaveTextContent("16 / 78")
-    unmount()
-    expect(disconnectMock).toHaveBeenCalled()
-  })
-
-  test("支持键盘翻页，减少动态效果时直接定位", () => {
+  test("点击侧牌先选中，再点击前方牌查看大图", () => {
     const { viewport } = setupGallery()
-    jest.mocked(window.matchMedia).mockReturnValue({ matches: true } as MediaQueryList)
-    fireEvent.keyDown(viewport, { key: "End" })
-    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 77 * 390, behavior: "auto" })
-    fireEvent.keyDown(viewport, { key: "Home" })
-    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 0, behavior: "auto" })
-    fireEvent.keyDown(viewport, { key: "ArrowRight" })
-    expect(scrollToMock).toHaveBeenLastCalledWith({ left: 390, behavior: "auto" })
+    fireEvent.click(screen.getByRole("button", { name: "移到前方：魔术师 / The Magician" }))
+    expect(viewport).toHaveFocus()
+    expect(screen.getByRole("status")).toHaveTextContent("2 / 78")
+    expect(screen.queryByRole("img", { name: "魔术师 / The Magician" })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "查看大图：魔术师 / The Magician" }))
+    expect(viewport.querySelectorAll("img")).toHaveLength(1)
+    expect(screen.getByRole("img", { name: "魔术师 / The Magician" })).toHaveAttribute(
+      "src", expect.stringContaining("major_01.webp"),
+    )
+    expect(screen.getByRole("button", { name: "返回牌环" })).toHaveFocus()
   })
 
-  test("手势共用实际页码，和键盘交替翻页时保持首尾边界", () => {
+  test("使用键盘确认、切换和返回，牌环保留最后查看的牌", () => {
+    const { viewport, confirm } = setupGallery()
+    const lastCard = CARDS.at(-1)!
+    fireEvent.keyDown(viewport, { key: "End" })
+    expect(screen.getByRole("status")).toHaveTextContent("78 / 78")
+    fireEvent.keyDown(viewport, { key: "Home" })
+    fireEvent.keyDown(viewport, { key: "Enter" })
+    expect(screen.getByRole("img", { name: "愚人 / The Fool" })).toBeVisible()
+
+    const back = screen.getByRole("button", { name: "返回牌环" })
+    fireEvent.keyDown(back, { key: "ArrowLeft" })
+    expect(screen.getByRole("img", { name: `${lastCard.nameZh} / ${lastCard.nameEn}` })).toBeVisible()
+    fireEvent.keyDown(back, { key: "Escape" })
+    expect(screen.getByRole("status")).toHaveTextContent("78 / 78")
+    expect(viewport.querySelector("[aria-current]")).toHaveAccessibleName(
+      `查看大图：${lastCard.nameZh} / ${lastCard.nameEn}`,
+    )
+    expect(confirm).toHaveFocus()
+  })
+
+  test("动画中的按钮、键盘和挥手从最近的目标继续，大图中直接切换", () => {
+    jest.useFakeTimers()
+    reducedMotion = false
     let swipe!: (direction: SwipeDirection) => void
     const mock = jest.mocked(handSwipe.useHandSwipe).mockImplementation((callback) => {
       swipe = callback
       return {
-        videoRef: { current: null }, status: "running", error: null,
+        videoRef: { current: null }, status: "running", guide: "ready", error: null,
         start: jest.fn(), stop: jest.fn(),
       }
     })
     try {
-      const { viewport, scrollToIndex } = setupGallery()
-      act(() => swipe("right"))
-      expect(scrollToMock).toHaveBeenLastCalledWith({ left: 0, behavior: "smooth" })
-      act(() => swipe("left"))
-      expect(scrollToMock).toHaveBeenLastCalledWith({ left: 390, behavior: "smooth" })
-      scrollToIndex(1)
+      const { viewport, next, confirm } = setupGallery()
+      fireEvent.click(next)
       fireEvent.keyDown(viewport, { key: "ArrowRight" })
-      expect(scrollToMock).toHaveBeenLastCalledWith({ left: 780, behavior: "smooth" })
-      scrollToIndex(2)
-      act(() => swipe("right"))
-      expect(scrollToMock).toHaveBeenLastCalledWith({ left: 390, behavior: "smooth" })
-      scrollToIndex(77)
       act(() => swipe("left"))
-      expect(scrollToMock).toHaveBeenLastCalledWith({ left: 77 * 390, behavior: "smooth" })
-      expect(screen.getByRole("status")).toHaveTextContent("78 / 78")
+      expect(screen.getByRole("status")).toHaveTextContent("1 / 78")
+      act(() => jest.advanceTimersByTime(300))
+      expect(screen.getByRole("status")).toHaveTextContent("4 / 78")
+      fireEvent.click(confirm)
+      act(() => swipe("right"))
+      expect(screen.getByRole("status")).toHaveTextContent("3 / 78")
+      expect(screen.getByRole("img", { name: "女祭司 / The High Priestess" })).toBeVisible()
     } finally {
       mock.mockImplementation(jest.requireActual("@/hooks/useHandSwipe").useHandSwipe)
+      jest.useRealTimers()
     }
   })
 })

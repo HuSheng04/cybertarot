@@ -26,7 +26,7 @@ test.describe("电脑端摄像头手势", () => {
     expect(assets).toEqual([])
     expect(await page.locator("video").evaluate((video) => video.srcObject)).toBeNull()
     await page.getByRole("button", { name: "开启手势翻页" }).click()
-    await expect(page.getByText("手放中间，左挥下一张", { exact: false })).toBeVisible({ timeout: 60_000 })
+    await expect(page.getByText("请举起一只手", { exact: false })).toBeVisible({ timeout: 60_000 })
     await expect(page.getByRole("button", { name: "关闭手势翻页" })).toHaveAttribute("aria-pressed", "true")
     expect(assets.some((url) => url.endsWith("hand_landmarker.task"))).toBe(true)
     expect(assets.some((url) => url.endsWith(".wasm"))).toBe(true)
@@ -40,6 +40,15 @@ test.describe("电脑端摄像头手势", () => {
       const stream = video.srcObject as MediaStream
       ;(window as unknown as { cameraTracks: MediaStreamTrack[] }).cameraTracks = stream.getTracks()
     })
+    await page.getByRole("button", { name: "查看大图", exact: true }).click()
+    await expect(page.getByRole("img", { name: "愚人 / The Fool" })).toBeVisible()
+    await page.getByRole("button", { name: "返回牌环" }).click()
+    expect(await page.locator("video").evaluate((video) => {
+      const { cameraTracks } = window as unknown as { cameraTracks: MediaStreamTrack[] }
+      return (video.srcObject as MediaStream).getTracks().every((track) => (
+        cameraTracks.includes(track) && track.readyState === "live"
+      ))
+    })).toBe(true)
     await page.getByRole("button", { name: "关闭手势翻页" }).click()
     await expect(page.getByRole("button", { name: "开启手势翻页" })).toHaveAttribute("aria-pressed", "false")
     expect(await page.locator("video").evaluate((video) => video.srcObject)).toBeNull()

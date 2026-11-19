@@ -5,11 +5,10 @@
 ## 功能
 
 - 按大阿卡纳、权杖、圣杯、宝剑、星币的原始顺序浏览全部 78 张牌。
-- 手机左右滑动、桌面触控板横向滚动，松手后牌面自动居中。
-- 使用「上一张」「下一张」翻页，页码与实际滚动位置同步；首尾按钮自动禁用。
-- 聚焦画廊后，可用左右方向键翻页，Home / End 跳到首张 / 末张。
-- 电脑端点击「开启手势翻页」后授权摄像头，手放中间停稳，左挥下一张、右挥上一张；每次挥手后回中停稳再继续。关闭、取消开启或离开页面会释放摄像头。
-- 图片按可用空间等比例显示，保留完整插画；首张优先加载，其余按需加载。
+- 首页显示可旋转的缩略图牌环。鼠标拖动、手指滑动或触控板横滑后，最近的牌会吸附到正前方。
+- 点击侧边牌、使用「上一张」「下一张」或按左右方向键选牌。第 78 张和第 1 张双向相连，Home / End 可跳到首张或末张。
+- 点击前方牌、「查看大图」或按 Enter 查看完整牌面。可在大图中继续切牌，点击「返回牌环」或按 Esc 时保留最后查看的牌。
+- 电脑端点击「开启手势翻页」后授权摄像头，左挥下一张、右挥上一张，每次挥手后回中停稳。切换牌环和大图时沿用同一次会话，关闭、取消开启或离开页面时释放摄像头。
 - `/cards` 和 `/about` 自动跳转到首页。
 
 ## 本地启动
@@ -30,7 +29,7 @@ pnpm build            # 压缩图片并进行生产构建
 pnpm start            # 启动生产版本
 ```
 
-浏览器回归测试覆盖桌面和手机、全部 78 张牌的加载、原生滑动吸附、窗口旋转及旧接口下线。首次运行需安装 Chromium；在一个终端运行 `pnpm build && pnpm start`，再在另一个终端执行：
+浏览器回归测试覆盖桌面和手机、全部 78 张牌的加载、首尾循环、原生滑动吸附、大小图切换和摄像头会话。首次运行需安装 Chromium。在一个终端运行 `pnpm build && pnpm start`，再在另一个终端运行以下命令。
 
 ```bash
 pnpm exec playwright install chromium
@@ -43,17 +42,19 @@ pnpm test:e2e
 
 ## 技术与结构
 
-使用 Next.js 16 App Router、React 19、TypeScript 和 Tailwind CSS v4。画廊采用原生横向滚动与 CSS Scroll Snap，手势翻页通过 MediaPipe Hand Landmarker 在本地识别，不依赖远程 AI 服务。
+使用 Next.js 16 App Router、React 19、TypeScript 和 Tailwind CSS v4。缩略图按连续牌位沿椭圆排列，手势翻页通过 MediaPipe Hand Landmarker 在本地识别。
 
 ```text
 src/
 ├── app/
 │   ├── page.tsx              # 首页画廊
 │   ├── layout.tsx            # 全局布局及分享元数据
-│   ├── globals.css           # 自适应布局、滚动吸附与画廊样式
+│   ├── globals.css           # 自适应布局与画廊样式
 │   ├── cards/page.tsx        # 跳转至首页
 │   └── about/page.tsx        # 跳转至首页
-├── components/CardGallery.tsx
+├── components/
+│   ├── CardGallery.tsx       # 选牌状态、吸附与大图视图
+│   └── CardRing.tsx          # 缩略图环、拖动与横向滚轮事件
 ├── hooks/useHandSwipe.ts     # 摄像头与识别器生命周期、15fps 视频采样
 ├── lib/handSwipe.ts          # 镜像掌心、挥手判定与回中解锁
 ├── data/cards.ts             # 全部 78 张牌的数据与图片路径

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { HandLandmarker } from "@mediapipe/tasks-vision"
 import { getMirroredPalm, HandSwipeTracker } from "@/lib/handSwipe"
-import type { SwipeDirection } from "@/lib/handSwipe"
+import type { SwipeDirection, SwipeGuide } from "@/lib/handSwipe"
 
 type Status = "idle" | "starting" | "running" | "error"
 type Session = {
@@ -48,6 +48,7 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void) {
   const sessionRef = useRef<Session | null>(null)
   const onSwipeRef = useRef(onSwipe)
   const [status, setStatus] = useState<Status>("idle")
+  const [guide, setGuide] = useState<SwipeGuide>("searching")
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => { onSwipeRef.current = onSwipe }, [onSwipe])
@@ -80,6 +81,7 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void) {
       video, stream: null, detector: null, frame: null, removeListeners: () => {},
     }
     sessionRef.current = session
+    setGuide("searching")
     setStatus("starting")
     const isCurrent = () => sessionRef.current === session
     const fail = (message: string) => {
@@ -136,6 +138,7 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void) {
       const detect = (now: number) => {
         if (!isCurrent()) return
         try {
+          const previousGuide = tracker.guide
           if (document.hidden) tracker.reset()
           else if (now - lastSample >= 1000 / 15 && video.readyState >= 2
             && video.currentTime !== lastVideoTime) {
@@ -147,6 +150,7 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void) {
             )
             if (direction) onSwipeRef.current(direction)
           }
+          if (previousGuide !== tracker.guide) setGuide(tracker.guide)
           if (isCurrent()) session.frame = requestAnimationFrame(detect)
         } catch {
           fail("手势识别运行失败，请重新开启；仍可使用按钮或方向键翻页。")
@@ -158,5 +162,5 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void) {
     }
   }, [cleanup, stop])
 
-  return { videoRef, status, error, start, stop }
+  return { videoRef, status, guide, error, start, stop }
 }
