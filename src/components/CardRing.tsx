@@ -1,12 +1,16 @@
 "use client"
 
 import Image from "next/image"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import type { CSSProperties, PointerEvent } from "react"
 import { CARDS } from "@/data/cards"
+import PinchProgress from "./PinchProgress"
 
 export const PIXELS_PER_CARD = 90
 const DRAG_THRESHOLD = 6
+const DESKTOP_CARD_COUNT = 17
+const MOBILE_CARD_COUNT = 5
+const CARD_BACK_IMAGE = "/assets/cards/card_back.webp"
 
 export function wrapCardIndex(slot: number) {
   return ((slot % CARDS.length) + CARDS.length) % CARDS.length
@@ -22,27 +26,24 @@ type Drag = {
 
 type CardRingProps = {
   position: number
+  showBacks: boolean
   onDrag: (position: number) => void
   onSnap: () => void
   onWheel: (pixels: number) => void
   onSelect: (slot: number) => void
+  onInteractionChange?: (active: boolean) => void
+  pinchProgress?: number | null
 }
 
-export default function CardRing({ position, onDrag, onSnap, onWheel, onSelect }: CardRingProps) {
+export default function CardRing({ position, showBacks, onDrag, onSnap, onWheel, onSelect, onInteractionChange, pinchProgress = null }: CardRingProps) {
   const ringRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<Drag | null>(null)
   const suppressClickRef = useRef(false)
-  const [count, setCount] = useState(9)
+  const count = showBacks ? DESKTOP_CARD_COUNT : MOBILE_CARD_COUNT
   const center = Math.round(position)
   const half = (count - 1) / 2
 
-  useEffect(() => {
-    const narrowScreen = window.matchMedia("(max-width: 767px)")
-    const updateCount = () => setCount(narrowScreen.matches ? 5 : 9)
-    updateCount()
-    narrowScreen.addEventListener("change", updateCount)
-    return () => narrowScreen.removeEventListener("change", updateCount)
-  }, [])
+  useEffect(() => () => onInteractionChange?.(false), [onInteractionChange])
 
   useEffect(() => {
     const ring = ringRef.current
@@ -68,6 +69,7 @@ export default function CardRing({ position, onDrag, onSnap, onWheel, onSelect }
     if (!event.isPrimary || event.button !== 0 || dragRef.current) return
 
     suppressClickRef.current = false
+    onInteractionChange?.(true)
     dragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -98,6 +100,7 @@ export default function CardRing({ position, onDrag, onSnap, onWheel, onSelect }
     if (drag?.pointerId !== event.pointerId) return
 
     dragRef.current = null
+    onInteractionChange?.(false)
     if (drag.moved) onSnap()
   }
 
@@ -129,7 +132,11 @@ export default function CardRing({ position, onDrag, onSnap, onWheel, onSelect }
         const cosine = Math.cos(theta)
         const depth = (cosine + 1) / 2
         const front = slot === center
-        const card = CARDS[wrapCardIndex(slot)]
+        const index = wrapCardIndex(slot)
+        const card = CARDS[index]
+        const label = showBacks
+          ? (front ? `翻开第 ${index + 1} 张` : `将第 ${index + 1} 张移到前方`)
+          : `${front ? "查看大图" : "移到前方"}：${card.nameZh} / ${card.nameEn}`
 
         return (
           <button
@@ -138,7 +145,8 @@ export default function CardRing({ position, onDrag, onSnap, onWheel, onSelect }
             className="card-ring-thumbnail"
             tabIndex={-1}
             aria-current={front ? true : undefined}
-            aria-label={`${front ? "查看大图" : "移到前方"}：${card.nameZh} / ${card.nameEn}`}
+            aria-label={label}
+            data-pinch-active={front && pinchProgress !== null ? true : undefined}
             onClick={() => onSelect(slot)}
             style={{
               "--ring-x": Math.sin(theta),
@@ -148,7 +156,7 @@ export default function CardRing({ position, onDrag, onSnap, onWheel, onSelect }
             } as CSSProperties}
           >
             <Image
-              src={card.imagePath}
+              src={showBacks ? CARD_BACK_IMAGE : card.imagePath}
               alt=""
               fill
               sizes="(max-width: 400px) 28vw, (max-width: 767px) 120px, (max-width: 1050px) 16vw, 164px"
@@ -157,6 +165,7 @@ export default function CardRing({ position, onDrag, onSnap, onWheel, onSelect }
               fetchPriority={front ? "high" : undefined}
               draggable={false}
             />
+            {front && pinchProgress !== null && <PinchProgress progress={pinchProgress} />}
           </button>
         )
       })}

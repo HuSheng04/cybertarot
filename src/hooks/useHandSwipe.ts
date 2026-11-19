@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import type { HandLandmarker } from "@mediapipe/tasks-vision"
 import { getMirroredPalm, HandSwipeTracker } from "@/lib/handSwipe"
 import type { SwipeDirection, SwipeGuide, SwipeMode } from "@/lib/handSwipe"
+import { getPinchRatio, INITIAL_PINCH, PINCH_TRACKING_GRACE_MS, PinchTracker, samePinchTarget } from "@/lib/pinch"
+import type { PinchControls, PinchFeedback } from "@/lib/pinch"
 
 type Status = "idle" | "starting" | "running" | "error"
 type Session = {
@@ -13,11 +15,13 @@ type Session = {
   frame: number | null
   removeListeners: () => void
   tracker: HandSwipeTracker
+  pinch: PinchTracker
 }
 
 function release(session: Session) {
   if (session.frame !== null) cancelAnimationFrame(session.frame)
   session.removeListeners()
+  session.pinch.reset()
   session.stream?.getTracks().forEach((track) => track.stop())
   if (session.stream && session.video.srcObject === session.stream) {
     session.video.pause()
@@ -44,19 +48,23 @@ function cameraError(error: unknown) {
   }
 }
 
-export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void, swipeMode: SwipeMode = "single") {
+export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void, swipeMode: SwipeMode = "single", pinchControls?: PinchControls) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const sessionRef = useRef<Session | null>(null)
   const onSwipeRef = useRef(onSwipe)
   const swipeModeRef = useRef(swipeMode)
+  const pinchControlsRef = useRef(pinchControls)
   const [status, setStatus] = useState<Status>("idle")
   const [guide, setGuide] = useState<SwipeGuide>("searching")
   const [error, setError] = useState<string | null>(null)
+  const [pinch, setPinch] = useState<PinchFeedback>(INITIAL_PINCH)
 
   useEffect(() => { onSwipeRef.current = onSwipe }, [onSwipe])
+  useEffect(() => { pinchControlsRef.current = pinchControls }, [pinchControls])
   useEffect(() => {
     swipeModeRef.current = swipeMode
     sessionRef.current?.tracker.setMode(swipeMode)
+    sessionRef.current?.pinch.reset()
   }, [swipeMode])
 
   const cleanup = useCallback(() => {
@@ -69,6 +77,7 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void, swipe
     cleanup()
     setStatus("idle")
     setError(null)
+    setPinch(INITIAL_PINCH)
   }, [cleanup])
 
   useEffect(() => cleanup, [cleanup])
@@ -86,17 +95,25 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void, swipe
     const session: Session = {
       video, stream: null, detector: null, frame: null, removeListeners: () => {},
       tracker: new HandSwipeTracker(swipeModeRef.current),
+      pinch: new PinchTracker(),
     }
     sessionRef.current = session
     setGuide("searching")
+    setPinch(INITIAL_PINCH)
     setStatus("starting")
     const isCurrent = () => sessionRef.current === session
     const tracker = session.tracker
+    const pinchTracker = session.pinch
+    let publishedPinch = INITIAL_PINCH
     let publishedGuide: SwipeGuide = "searching"
     const publishGuide = () => {
       if (isCurrent() && publishedGuide !== tracker.guide) {
         publishedGuide = tracker.guide
         setGuide(tracker.guide)
+      }
+      if (isCurrent() && publishedPinch !== pinchTracker.feedback) {
+        publishedPinch = pinchTracker.feedback
+        setPinch(publishedPinch)
       }
     }
     const fail = (message: string) => {
@@ -104,11 +121,13 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void, swipe
       cleanup()
       setError(message)
       setStatus("error")
+      setPinch(INITIAL_PINCH)
     }
     const onPageHide = () => stop()
     const onVisibilityChange = () => {
       if (!document.hidden) return
       tracker.reset()
+      pinchTracker.reset()
       publishGuide()
     }
     window.addEventListener("pagehide", onPageHide)
@@ -162,16 +181,44 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void, swipe
       const detect = (now: number) => {
         if (!isCurrent()) return
         try {
-          if (document.hidden) tracker.reset()
+          const controls = pinchControlsRef.current
+          const context = controls?.getContext()
+          // Clear stale feedback even if a stopped video produces no new frames.
+          if (now - lastSample > PINCH_TRACKING_GRACE_MS || (pinchTracker.feedback.phase === "holding"
+            && context && (!context.settled || !samePinchTarget(context.target, pinchTracker.feedback.target)))) {
+            pinchTracker.reset()
+          }
+          if (document.hidden) {
+            tracker.reset()
+            pinchTracker.reset()
+          }
           else if (now - lastSample >= 1000 / 15 && video.readyState >= 2
             && video.currentTime !== lastVideoTime) {
             lastSample = now
             lastVideoTime = video.currentTime
             const result = detector.detectForVideo(video, now)
+            const points = result.landmarks[0]
+            const palm = getMirroredPalm(points)
             const direction = tracker.update(
-              getMirroredPalm(result.landmarks[0]), now, video.videoWidth, video.videoHeight,
+              palm, now, video.videoWidth, video.videoHeight,
             )
-            if (direction) onSwipeRef.current(direction)
+            if (direction) {
+              pinchTracker.reset()
+              onSwipeRef.current(direction)
+            } else {
+              if (controls && context) {
+                const confirmed = pinchTracker.update({
+                  ratio: getPinchRatio(points, video.videoWidth, video.videoHeight), palm, time: now,
+                  target: context.target,
+                  canStart: tracker.guide === "ready" && !!palm && palm.x >= 0.25 && palm.x <= 0.75 && context.settled,
+                })
+                if (confirmed) {
+                  const latest = controls.getContext()
+                  if (latest.settled && samePinchTarget(latest.target, confirmed)) controls.onConfirm(confirmed)
+                  else pinchTracker.reset()
+                }
+              }
+            }
           }
           publishGuide()
           if (isCurrent()) session.frame = requestAnimationFrame(detect)
@@ -185,5 +232,5 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void, swipe
     }
   }, [cleanup, stop])
 
-  return { videoRef, status, guide, error, start, stop }
+  return { videoRef, status, guide, error, pinch, start, stop }
 }

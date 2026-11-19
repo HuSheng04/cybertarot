@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react"
 import { useHandSwipe } from "@/hooks/useHandSwipe"
 import type { SwipeDirection, SwipeMode } from "@/lib/handSwipe"
+import type { PinchContext, PinchControls, PinchTarget } from "@/lib/pinch"
 
 const createDetector = jest.fn()
 const resolveFiles = jest.fn()
@@ -47,8 +48,8 @@ beforeEach(() => {
 
 afterEach(() => { jest.restoreAllMocks() })
 
-function setup(onSwipe = jest.fn(), swipeMode: SwipeMode = "single") {
-  const hook = renderHook(({ mode }) => useHandSwipe(onSwipe, mode), { initialProps: { mode: swipeMode } })
+function setup(onSwipe = jest.fn(), swipeMode: SwipeMode = "single", pinchControls?: PinchControls) {
+  const hook = renderHook(({ mode }) => useHandSwipe(onSwipe, mode, pinchControls), { initialProps: { mode: swipeMode } })
   const video = document.createElement("video")
   Object.defineProperty(video, "readyState", { value: 2 })
   Object.defineProperty(video, "videoWidth", { value: 640 })
@@ -57,10 +58,18 @@ function setup(onSwipe = jest.fn(), swipeMode: SwipeMode = "single") {
   return { ...hook, video, onSwipe }
 }
 
-function sampleFrame(video: HTMLVideoElement, time: number, mirrorX: number | null, fresh = true) {
+function sampleFrame(video: HTMLVideoElement, time: number, mirrorX: number | null, fresh = true, ratio?: number) {
   if (fresh) video.currentTime = time / 1000
+  const points = Array.from({ length: 21 }, () => ({ x: 1 - (mirrorX ?? 0.5), y: 0.5 }))
+  if (ratio !== undefined) {
+    const x = 1 - (mirrorX ?? 0.5)
+    points[5] = { x: x - 0.08, y: 0.5 }
+    points[17] = { x: x + 0.08, y: 0.5 }
+    points[4] = { x: x - 0.02, y: 0.4 }
+    points[8] = { x: x - 0.02 + 0.16 * ratio, y: 0.4 }
+  }
   detector.detectForVideo.mockReturnValue({
-    landmarks: mirrorX === null ? [] : [Array.from({ length: 21 }, () => ({ x: 1 - mirrorX, y: 0.5 }))],
+    landmarks: mirrorX === null ? [] : [points],
   })
   const [id, callback] = frames.entries().next().value!
   frames.delete(id)
@@ -297,4 +306,115 @@ test.each(["stop", "ended", "unmount"])("连翻待触发时 %s 会取消帧循�
   expect(track.stop).toHaveBeenCalledTimes(1)
   expect(detector.close).toHaveBeenCalledTimes(1)
   expect(video.srcObject).toBeNull()
+})
+
+async function startPinch(mode: SwipeMode = "single") {
+  const context: PinchContext = { target: { view: "ring", slot: 0, revision: 0 }, settled: true }
+  const onConfirm = jest.fn((target: PinchTarget) => {
+    context.target = { ...target, view: target.view === "ring" ? "detail" : "ring", revision: target.revision + 1 }
+  })
+  const onSwipe = jest.fn((direction: SwipeDirection) => {
+    context.target = { ...context.target, slot: context.target.slot + (direction === "left" ? 1 : -1), revision: context.target.revision + 1 }
+  })
+  const controls = { getContext: jest.fn(() => context), onConfirm }
+  const { stream, track } = camera()
+  getUserMedia.mockResolvedValue(stream)
+  const hook = setup(onSwipe, mode, controls)
+  await act(async () => { await hook.result.current.start() })
+  for (const time of [0, 70, 140]) sampleFrame(hook.video, time, 0.5, true, 0.6)
+  expect(hook.result.current.guide).toBe("ready")
+  return { ...hook, controls, context, onConfirm, track }
+}
+
+test.each(["single", "repeat"] as const)("%s 模式中长捏只打开一次，松开再捏才返回", async (mode) => {
+  const { video, result, onConfirm, track } = await startPinch(mode)
+  sampleFrame(video, 210, 0.5, true, 0.2)
+  expect(result.current.pinch.phase).toBe("holding")
+  for (const time of [280, 350, 420]) sampleFrame(video, time, 0.5, true, 0.3)
+  expect(onConfirm).not.toHaveBeenCalled()
+  expect(result.current.pinch.progress).toBeGreaterThan(0.8)
+  sampleFrame(video, 490, 0.5, true, 0.3)
+  expect(onConfirm).toHaveBeenCalledTimes(1)
+  expect(onConfirm).toHaveBeenLastCalledWith({ view: "ring", slot: 0, revision: 0 })
+  for (const time of [560, 630, 700]) sampleFrame(video, time, 0.5, true, 0.2)
+  expect(result.current.pinch.phase).toBe("locked")
+  expect(onConfirm).toHaveBeenCalledTimes(1)
+  sampleFrame(video, 770, 0.5, true, 0.6)
+  for (const time of [840, 910, 980, 1050, 1120]) sampleFrame(video, time, 0.5, true, 0.2)
+  expect(onConfirm).toHaveBeenCalledTimes(2)
+  expect(onConfirm).toHaveBeenLastCalledWith({ view: "detail", slot: 0, revision: 1 })
+  expect(getUserMedia).toHaveBeenCalledTimes(1)
+  expect(createDetector).toHaveBeenCalledTimes(1)
+  expect(track.stop).not.toHaveBeenCalled()
+})
+
+test("同帧捏合到期与挥手冲突时只派发翻页", async () => {
+  const { video, result, onSwipe, onConfirm } = await startPinch()
+  for (const time of [210, 280, 350, 420]) sampleFrame(video, time, 0.5, true, 0.2)
+  sampleFrame(video, 490, 0.34, true, 0.2)
+  expect(onSwipe).toHaveBeenCalledWith("left")
+  expect(onConfirm).not.toHaveBeenCalled()
+  expect(result.current.pinch.progress).toBe(0)
+})
+
+test.each(["横移", "缺手", "停帧", "换牌", "切换模式", "后台", "画廊移动"])("捏合中途%s会撤销确认，闭合恢复不再自动确认", async (reason) => {
+  const { video, result, context, rerender, onConfirm } = await startPinch()
+  sampleFrame(video, 210, 0.5, true, 0.2)
+  if (reason === "后台") {
+    Object.defineProperty(document, "hidden", { value: true })
+    act(() => document.dispatchEvent(new Event("visibilitychange")))
+    expect(result.current.pinch.progress).toBe(0)
+    Object.defineProperty(document, "hidden", { value: false })
+    act(() => document.dispatchEvent(new Event("visibilitychange")))
+  } else if (reason === "换牌") context.target = { ...context.target, slot: 1, revision: 1 }
+  else if (reason === "切换模式") act(() => rerender({ mode: "repeat" }))
+  else if (reason === "画廊移动") context.settled = false
+  sampleFrame(video, 280, reason === "缺手" ? null : reason === "横移" ? 0.56 : 0.5, reason !== "停帧", 0.2)
+  context.settled = true
+  if (reason === "停帧") {
+    sampleFrame(video, 350, 0.5, false, 0.2)
+    sampleFrame(video, 420, 0.5, false, 0.2)
+    expect(result.current.pinch).toMatchObject({ phase: "waiting-open", progress: 0 })
+  } else for (const time of [350, 420]) sampleFrame(video, time, 0.5, true, 0.2)
+  for (const time of [490, 560, 630, 700, 770]) sampleFrame(video, time, 0.5, true, 0.2)
+  expect(onConfirm).not.toHaveBeenCalled()
+  expect(result.current.pinch).toMatchObject({ phase: "waiting-open", progress: 0 })
+})
+
+test("画廊输入即使没有新视频帧也会撤销捏合描边", async () => {
+  const { video, result, context, onConfirm } = await startPinch()
+  sampleFrame(video, 210, 0.5, true, 0.2)
+  expect(result.current.pinch.phase).toBe("holding")
+  const calls = detector.detectForVideo.mock.calls.length
+  context.settled = false
+  sampleFrame(video, 280, 0.5, false, 0.2)
+  expect(detector.detectForVideo).toHaveBeenCalledTimes(calls)
+  expect(result.current.pinch).toMatchObject({ phase: "waiting-open", progress: 0 })
+  expect(onConfirm).not.toHaveBeenCalled()
+})
+
+test("侧边捏住不妨碍原有连翻，回中停稳并松开再捏可打开当前牌", async () => {
+  const { video, onSwipe, onConfirm } = await startPinch("repeat")
+  sampleFrame(video, 210, 0.4, true, 0.2)
+  sampleFrame(video, 280, 0.25, true, 0.2)
+  for (const time of [350, 420, 490, 560, 630, 700, 770]) sampleFrame(video, time, 0.25, true, 0.2)
+  expect(onSwipe).toHaveBeenCalledTimes(2)
+  expect(onConfirm).not.toHaveBeenCalled()
+  for (const time of [840, 910, 980, 1050]) sampleFrame(video, time, 0.5, true, 0.2)
+  expect(onConfirm).not.toHaveBeenCalled()
+  sampleFrame(video, 1120, 0.5, true, 0.6)
+  for (const time of [1190, 1260, 1330, 1400, 1470]) sampleFrame(video, time, 0.5, true, 0.2)
+  expect(onConfirm).toHaveBeenCalledTimes(1)
+  expect(onConfirm).toHaveBeenCalledWith({ view: "ring", slot: 2, revision: 2 })
+})
+
+test("确认前再次复核目标，目标变动时取消回调", async () => {
+  const { video, controls, context, onConfirm, result } = await startPinch()
+  for (const time of [210, 280, 350, 420]) sampleFrame(video, time, 0.5, true, 0.2)
+  controls.getContext.mockImplementationOnce(() => context).mockImplementationOnce(() => ({
+    ...context, target: { ...context.target, slot: 1 },
+  }))
+  sampleFrame(video, 490, 0.5, true, 0.2)
+  expect(onConfirm).not.toHaveBeenCalled()
+  expect(result.current.pinch.phase).toBe("waiting-open")
 })

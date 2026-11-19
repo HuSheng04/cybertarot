@@ -50,10 +50,12 @@ test.describe("电脑端摄像头手势", () => {
     await page.getByRole("radio", { name: "停留连翻" }).check()
     await expect(page.getByRole("button", { name: "关闭手势翻页" })).toBeVisible()
     expect(assets.filter((url) => url.endsWith("hand_landmarker.task"))).toHaveLength(1)
-    await page.getByRole("button", { name: "查看大图", exact: true }).click()
+    await page.getByRole("button", { name: "翻开这张牌" }).click()
     await expect(page.getByRole("img", { name: "愚人 / The Fool" })).toBeVisible()
     await expect(page.getByRole("radio", { name: "停留连翻" })).toBeChecked()
-    await page.getByRole("button", { name: "返回牌环" }).click()
+    await page.getByRole("radio", { name: "停留连翻" }).focus()
+    await page.keyboard.press("Escape")
+    await expect(page.getByRole("button", { name: "翻开这张牌" })).toBeFocused()
     await expect(page.getByRole("radio", { name: "停留连翻" })).toBeChecked()
     expect(await page.locator("video").evaluate((video) => {
       const { cameraTracks } = window as unknown as { cameraTracks: MediaStreamTrack[] }

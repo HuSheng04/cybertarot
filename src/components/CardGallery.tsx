@@ -1,29 +1,43 @@
 "use client"
 
 import Image from "next/image"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import type { KeyboardEvent } from "react"
 import { CARDS, SUIT_NAMES } from "@/data/cards"
 import { useHandSwipe } from "@/hooks/useHandSwipe"
 import type { SwipeDirection, SwipeGuide, SwipeMode } from "@/lib/handSwipe"
 import CardRing, { PIXELS_PER_CARD, wrapCardIndex } from "./CardRing"
+import PinchProgress from "./PinchProgress"
+import { samePinchTarget } from "@/lib/pinch"
+import type { PinchContext, PinchTarget } from "@/lib/pinch"
 
 const SNAP_DURATION_MS = 240
+const WHEEL_IDLE_MS = 150
+const NARROW_GALLERY_QUERY = "(max-width: 767px)"
+
 const gestureHints: Record<SwipeGuide, string> = {
   searching: "请举起一只手，让摄像头看到手掌",
   centering: "已看到手，请移到画面中间",
   settling: "手已居中，请稍停一下",
   ready: "已就绪　← 左挥看下一张　·　右挥看上一张 →",
-  returning: "已翻牌，请回到挥手前的位置并停稳",
-  "repeat-pending-left": "已翻一张，继续向左移并停留可连翻",
-  "repeat-pending-right": "已翻一张，继续向右移并停留可连翻",
+  returning: "已切换一张，请回到挥手前的位置并停稳",
+  "repeat-pending-left": "已切换一张，继续向左移并停留可连翻",
+  "repeat-pending-right": "已切换一张，继续向右移并停留可连翻",
   "holding-left": "保持在左侧即可连续看下一张",
   "holding-right": "保持在右侧即可连续看上一张",
   "repeating-left": "正在连续看下一张，手移回中间即可停止",
   "repeating-right": "正在连续看上一张，手移回中间即可停止",
 }
 
-const WHEEL_IDLE_MS = 150
+function subscribeToGalleryWidth(onChange: () => void) {
+  const narrowScreen = window.matchMedia(NARROW_GALLERY_QUERY)
+  narrowScreen.addEventListener("change", onChange)
+  return () => narrowScreen.removeEventListener("change", onChange)
+}
+
+function isNarrowGallery() {
+  return window.matchMedia(NARROW_GALLERY_QUERY).matches
+}
 
 export default function CardGallery() {
   const viewportRef = useRef<HTMLDivElement>(null)
@@ -33,9 +47,15 @@ export default function CardGallery() {
   const targetRef = useRef(0)
   const frameRef = useRef<number | null>(null)
   const wheelTimerRef = useRef<number | null>(null)
+  const draggingRef = useRef(false)
+  const modeRef = useRef<"ring" | "detail">("ring")
+  const interactionRevision = useRef(0)
   const [mode, setMode] = useState<"ring" | "detail">("ring")
   const [swipeMode, setSwipeMode] = useState<SwipeMode>("single")
   const [position, setPosition] = useState(0)
+  const narrowGallery = useSyncExternalStore(subscribeToGalleryWidth, isNarrowGallery, () => false)
+  const showBacks = mode === "ring" && !narrowGallery
+  const revealLabel = showBacks ? "翻开这张牌" : "查看大图"
   const currentIndex = wrapCardIndex(Math.round(position))
   const currentCard = CARDS[currentIndex]
 
@@ -52,6 +72,7 @@ export default function CardGallery() {
   }, [])
 
   const goTo = useCallback((target: number, immediate = false) => {
+    interactionRevision.current += 1
     cancelMotion()
     targetRef.current = target
     const from = positionRef.current
@@ -82,6 +103,7 @@ export default function CardGallery() {
   }, [goTo, mode])
 
   const rotateTo = useCallback((next: number) => {
+    interactionRevision.current += 1
     cancelMotion()
     targetRef.current = Math.round(next)
     updatePosition(next)
@@ -102,11 +124,44 @@ export default function CardGallery() {
     modeButtonRef.current?.focus()
   }, [mode])
 
+  const changeMode = useCallback((next: "ring" | "detail") => {
+    goTo(Math.round(positionRef.current), true)
+    modeRef.current = next
+    focusModeButton.current = true
+    setMode(next)
+  }, [goTo])
+
+  const getPinchContext = useCallback((): PinchContext => ({
+    target: { view: modeRef.current, slot: Math.round(positionRef.current), revision: interactionRevision.current },
+    settled: !draggingRef.current && frameRef.current === null && wheelTimerRef.current === null
+      && Math.abs(positionRef.current - Math.round(positionRef.current)) < 0.0001
+      && Math.abs(positionRef.current - targetRef.current) < 0.0001,
+  }), [])
+
+  const confirmPinch = useCallback((target: PinchTarget) => {
+    const current = getPinchContext()
+    if (!current.settled || !samePinchTarget(current.target, target)) return
+    changeMode(target.view === "ring" ? "detail" : "ring")
+  }, [changeMode, getPinchContext])
+  const pinchControls = useMemo(() => ({ getContext: getPinchContext, onConfirm: confirmPinch }), [getPinchContext, confirmPinch])
+
+  const onRingInteraction = useCallback((active: boolean) => {
+    draggingRef.current = active
+    if (active) interactionRevision.current += 1
+  }, [])
+
   const onSwipe = useCallback((direction: SwipeDirection) => {
     step(direction === "left" ? 1 : -1)
   }, [step])
-  const { videoRef, status: gestureStatus, guide, error: gestureError, start, stop } = useHandSwipe(onSwipe, swipeMode)
+  const { videoRef, status: gestureStatus, guide, error: gestureError, pinch, start, stop } = useHandSwipe(onSwipe, swipeMode, pinchControls)
   const gestureEnabled = gestureStatus === "starting" || gestureStatus === "running"
+  const pinchProgress = gestureStatus === "running" && pinch.phase === "holding"
+    && pinch.target?.view === mode && pinch.target.slot === Math.round(position) ? pinch.progress : null
+  const gestureHint = pinch.phase === "locked" ? "松开两指，再捏一次可切换牌环与大图"
+    : pinchProgress !== null ? (mode === "ring" ? "保持轻捏，正在翻开这张牌" : "保持轻捏，正在返回牌环")
+      : guide === "ready" && pinch.phase === "waiting-open" ? "先松开两指，再轻捏确认"
+        : guide === "ready" ? (mode === "ring" ? "左右挥手选牌，拇指与食指轻捏翻开" : "左右挥手选牌，再次轻捏，返回牌环")
+          : gestureHints[guide]
 
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 768px) and (any-pointer: fine)")
@@ -114,12 +169,6 @@ export default function CardGallery() {
     desktop.addEventListener("change", stopOnMobile)
     return () => desktop.removeEventListener("change", stopOnMobile)
   }, [stop])
-
-  function changeMode(next: "ring" | "detail") {
-    goTo(Math.round(positionRef.current), true)
-    focusModeButton.current = true
-    setMode(next)
-  }
 
   function selectThumbnail(slot: number) {
     if (slot === Math.round(positionRef.current)) changeMode("detail")
@@ -137,7 +186,7 @@ export default function CardGallery() {
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.altKey || event.ctrlKey || event.metaKey) return
     // Let native radio arrow keys select the gesture mode without changing cards.
-    if (event.target instanceof HTMLInputElement && event.target.type === "radio") return
+    if (event.key !== "Escape" && event.target instanceof HTMLInputElement && event.target.type === "radio") return
 
     switch (event.key) {
       case "ArrowLeft":
@@ -192,10 +241,13 @@ export default function CardGallery() {
           {mode === "ring" ? (
             <CardRing
               position={position}
+              showBacks={showBacks}
               onDrag={dragTo}
               onSnap={snap}
               onWheel={rotateWithWheel}
               onSelect={selectThumbnail}
+              onInteractionChange={onRingInteraction}
+              pinchProgress={pinchProgress}
             />
           ) : (
             <div className="gallery-artwork">
@@ -211,11 +263,13 @@ export default function CardGallery() {
               />
             </div>
           )}
-          <figcaption className="gallery-caption">
-            <p className="gallery-suit">{SUIT_NAMES[currentCard.suit]}</p>
-            <h2>{currentCard.nameZh}</h2>
-            <p className="gallery-name-en" lang="en">{currentCard.nameEn}</p>
-          </figcaption>
+          {!showBacks && (
+            <figcaption className="gallery-caption">
+              <p className="gallery-suit">{SUIT_NAMES[currentCard.suit]}</p>
+              <h2>{currentCard.nameZh}</h2>
+              <p className="gallery-name-en" lang="en">{currentCard.nameEn}</p>
+            </figcaption>
+          )}
         </figure>
       </div>
 
@@ -227,7 +281,7 @@ export default function CardGallery() {
                 <span className="gallery-arrow" aria-hidden="true">←</span> 上一张
               </button>
               <p className="gallery-position" role="status" aria-live="polite" aria-atomic="true">
-                <span className="sr-only">{currentCard.nameZh} / {currentCard.nameEn}，</span>
+                {!showBacks && <span className="sr-only">{currentCard.nameZh} / {currentCard.nameEn}，</span>}
                 {currentIndex + 1} <span className="gallery-count-total">/ {CARDS.length}</span>
               </p>
               <button type="button" aria-controls="gallery-viewport" onClick={() => step(1)}>
@@ -238,10 +292,12 @@ export default function CardGallery() {
               type="button"
               ref={modeButtonRef}
               className="gallery-mode-button"
+              data-pinch-active={mode === "detail" && pinchProgress !== null ? true : undefined}
               aria-controls="gallery-viewport"
               onClick={() => changeMode(mode === "ring" ? "detail" : "ring")}
             >
-              {mode === "ring" ? "查看大图" : "返回牌环"}
+              {mode === "ring" ? revealLabel : "返回牌环"}
+              {mode === "detail" && pinchProgress !== null && <PinchProgress progress={pinchProgress} />}
             </button>
           </div>
           <div className="gallery-gesture">
@@ -275,12 +331,12 @@ export default function CardGallery() {
           </div>
         </div>
         <p id="gallery-hint" className="gallery-hint">
-          {mode === "ring" ? "左右滑动或按方向键选牌 · Enter 查看大图" : "方向键切换 · Esc 返回牌环"}
+          {mode === "ring" ? `左右滑动或按方向键选牌 · Enter ${revealLabel}` : "方向键切换 · Esc 返回牌环"}
         </p>
         <div className="gallery-gesture gallery-gesture-help">
           <p id="gesture-hint" aria-live="polite" aria-atomic="true" data-ready={gestureStatus === "running" && guide === "ready"}>
             {gestureStatus === "starting" ? "正在开启摄像头与加载模型，可随时取消…"
-              : gestureStatus === "running" ? gestureHints[guide]
+              : gestureStatus === "running" ? gestureHint
                 : "开启后用摄像头挥手翻页 · 画面仅在本机处理"}
           </p>
           {gestureError && <p className="gallery-gesture-error" role="alert">{gestureError}</p>}
