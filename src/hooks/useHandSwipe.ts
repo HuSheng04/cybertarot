@@ -48,7 +48,7 @@ function cameraError(error: unknown) {
   }
 }
 
-export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void, swipeMode: SwipeMode = "single", pinchControls?: PinchControls) {
+export function useHandSwipe(onSwipe: (direction: SwipeDirection, repeating?: boolean) => void, swipeMode: SwipeMode = "single", pinchControls?: PinchControls) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const sessionRef = useRef<Session | null>(null)
   const onSwipeRef = useRef(onSwipe)
@@ -204,7 +204,8 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection) => void, swipe
             )
             if (direction) {
               pinchTracker.reset()
-              onSwipeRef.current(direction)
+              // Repeat-driven frames keep the ring flowing at a steady pace.
+              onSwipeRef.current(direction, tracker.guide === `repeating-${direction}`)
             } else {
               if (controls && context) {
                 const confirmed = pinchTracker.update({
