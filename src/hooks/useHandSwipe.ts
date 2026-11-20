@@ -192,7 +192,7 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection, repeating?: bo
             tracker.reset()
             pinchTracker.reset()
           }
-          else if (now - lastSample >= 1000 / 15 && video.readyState >= 2
+          else if (now - lastSample >= 1000 / 20 && video.readyState >= 2
             && video.currentTime !== lastVideoTime) {
             lastSample = now
             lastVideoTime = video.currentTime
@@ -211,7 +211,7 @@ export function useHandSwipe(onSwipe: (direction: SwipeDirection, repeating?: bo
                 const confirmed = pinchTracker.update({
                   ratio: getPinchRatio(points, video.videoWidth, video.videoHeight), palm, time: now,
                   target: context.target,
-                  canStart: tracker.guide === "ready" && !!palm && palm.x >= 0.25 && palm.x <= 0.75 && context.settled,
+                  canStart: tracker.guide === "ready" && !!palm && palm.x >= 0.2 && palm.x <= 0.8 && context.settled,
                 })
                 if (confirmed) {
                   const latest = controls.getContext()

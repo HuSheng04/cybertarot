@@ -191,7 +191,7 @@ test.each(["ended", "pagehide", "unmount", "inference failure"])("%s 释放已�
   expect(frames.size).toBe(0)
 })
 
-test("识别视频帧被限制在约 15fps，并把镜像左挥传给画廊", async () => {
+test("识别视频帧被限制在约 20fps，并把镜像左挥传给画廊", async () => {
   const { stream } = camera()
   getUserMedia.mockResolvedValue(stream)
   const { result, video, onSwipe } = setup()
@@ -248,7 +248,8 @@ test.each(["收手", "丢手", "视频停帧"])("%s 会取消连翻，恢复后�
     sampleFrame(video, 620, 0.25, false)
     sampleFrame(video, 690, 0.25, false)
     expect(onSwipe).toHaveBeenCalledTimes(1)
-    sampleFrame(video, 760, 0.25)
+    // 恢复帧距上次有效识别 300ms，超过 250ms 容错，须重置
+    sampleFrame(video, 850, 0.25)
   } else {
     sampleFrame(video, 620, reason === "丢手" ? null : 0.5)
     sampleFrame(video, 690, 0.25)
